@@ -22,12 +22,14 @@ class ExpressBull
     bindRoutes()
 
   bindRoutes: ->
-    @router.get "/#{state}", @getHandler state for state in @states
-    @router.get "/data/id/:type/:id",    @dataById
-    @router.get "/pending/id/:type/:id", @makePendingById
-    @router.get "/delete/id/:type/:id",  @deleteById
-    @router.get "/delete/status/:type",  @deleteByStatus
-    @router.get "/queues",               @queues
+    @router.get "/queues",             @queues
+    @router.get "/:state/:id/pending", @makePendingById
+    @router.get "/:state/:id/delete",  @deleteById
+    @router.get "/:state/delete",      @deleteByState
+    @router.del "/:state/:id",         @deleteById
+    @router.get "/:state/:id",         @dataById
+    @router.get "/:state",             @state
+    @router.del "/:state",             @deleteByState
 
   getHandler: (state) -> (req, res, next) ->
     ideally = errify next
