@@ -236,8 +236,7 @@ class RedisModel
     return callback "state required" unless state
     ideally = errify callback
 
-    prefix = "bull:#{state}:"
-    await @redis.hgetall "#{prefix}id", ideally defer err, result
+    await @redis.hgetall "bull:#{state}:id", ideally defer err, result
     callback null, result
 
   progressForJobs: (jobs, callback) ->
