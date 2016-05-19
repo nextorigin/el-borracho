@@ -89,22 +89,6 @@ class RedisModel
       #Old list state
       @fullJobNamesFromIds list, callback
 
-  #Returns counts for different statees
-  stateCounts: (callback) ->
-    ideally = errify callback
-    await @jobsByState "active",   ideally defer active
-    await @jobsByState "complete", ideally defer completed
-    await @jobsByState "failed",   ideally defer failed
-    await @jobsByState "wait",     ideally defer pendingJobs
-    await @allJobs                 ideally defer allJobs
-
-    active:   active.count
-    complete: completed.count
-    failed:   failed.count
-    pending:  pendingJobs.count
-    total:    allJobs.length
-    stuck:    allJobs.length - (active.count + completed.count + failed.count + pendingJobs.count)
-
   #Returns all jobs in object form, with state applied to object. Ex: {id: 101, queue: "video transcoding", state: "pending"}
   formatJobs: (jobs, callback) ->
     return unless jobs
@@ -288,32 +272,40 @@ class RedisModel
     callback null, jobs
 
   queues: (callback) ->
-    ideally = errify callback
+    ideally   = errify callback
+    allCounts = {}
 
     await @redis.keys "bull:*:id", ideally defer queues
     for queue in queues
       name = queue[..-3]
+      await stateCounts name, ideally defer allCounts[queue]
 
-      await @redis.lrange name + ":active", 0, -1, ideally defer allActive
-      active = []
-      stuck  = []
-      for job in allActive
-        await @redis.get "#{name}:#{job}:lock", ideally defer lock
-        if lock? then active.push  job
-        else          stuck.push job
+    callback null, allCounts
 
-      await @redis.llen  "#{name}:wait",      ideally defer pending
-      await @redis.zcard "#{name}:delayed",   ideally defer delayed
-      await @redis.scard "#{name}:completed", ideally defer completed
-      await @redis.scard "#{name}:failed",    ideally defer failed
+  stateCounts: (queue, callback) ->
+    ideally = errify callback
 
-      callback null,
-        name:      name[5..]
-        active:    active.length
-        stuck:     stuck.length
-        pending:   pending
-        delayed:   delayed
-        completed: completed
-        failed:    failed
+    await @redis.lrange "#{queue}:active", 0, -1, ideally defer allActive
+    active = []
+    stuck  = []
+    for job in allActive
+      await @redis.get "#{queue}:#{job}:lock", ideally defer lock
+      if lock? then active.push job
+      else          stuck.push  job
+
+    await @redis.llen  "#{queue}:wait",      ideally defer pending
+    await @redis.zcard "#{queue}:delayed",   ideally defer delayed
+    await @redis.scard "#{queue}:completed", ideally defer completed
+    await @redis.scard "#{queue}:failed",    ideally defer failed
+
+    callback null,
+      name:      name[5..]
+      active:    active.length
+      stuck:     stuck.length
+      pending:   pending
+      delayed:   delayed
+      completed: completed
+      failed:    failed
+
 
 module.exports = RedisModel
