@@ -35,9 +35,10 @@ class RedisModel
 
   #Returns indexes of completed jobs
   jobsByState: (state, callback) ->
+    return callback "Invalid state: #{state} not in list of supported states" unless jobsByState = @["#{state}Jobs"]
     ideally = errify callback
 
-    await @["#{state}Jobs"] ideally defer stateJobs
+    await jobsByState ideally defer stateJobs
 
     jobs  = {}
     multi = []
