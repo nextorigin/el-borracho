@@ -273,12 +273,12 @@ class RedisModel
       name = queue[..-3]
 
       await @redis.lrange name + ":active", 0, -1, ideally defer allActive
-      active  = []
-      stalled = []
+      active = []
+      stuck  = []
       for job in allActive
         await @redis.get "#{name}:#{job}:lock", ideally defer lock
         if lock? then active.push  job
-        else          stalled.push job
+        else          stuck.push job
 
       await @redis.llen  "#{name}:wait",      ideally defer pending
       await @redis.zcard "#{name}:delayed",   ideally defer delayed
@@ -288,7 +288,7 @@ class RedisModel
       callback null,
         name:      name[5..]
         active:    active.length
-        stalled:   stalled.length
+        stuck:     stuck.length
         pending:   pending
         delayed:   delayed
         completed: completed
