@@ -33,12 +33,11 @@ class RedisModel
 
     callback null, {jobs, count}
 
-  #Returns indexes of completed jobs
-  jobsByState: (state, callback) ->
+  jobsByState: (queue = "*", state, callback) ->
     return callback "Invalid state: #{state} not in list of supported states" unless jobsByState = @["#{state}Jobs"]
     ideally = errify callback
 
-    await jobsByState ideally defer stateJobs
+    await jobsByState queue, ideally defer stateJobs
 
     jobs  = {}
     multi = []
@@ -160,7 +159,7 @@ class RedisModel
     (@redis.multi multi).exec()
 
   #Makes all jobs in a specific state pending
-  makePendingByState: (state, callback) ->
+  makePendingByState: (queue "*", state, callback) ->
     state = state.toLowerCase()
     validStates = [
       "active"
@@ -173,7 +172,7 @@ class RedisModel
     return callback "Invalid state: #{state} not in list of supported states" unless state in validStates
     ideally = errify callback
 
-    await @jobsByState state, ideally defer allJobs
+    await @jobsByState queue, state, ideally defer allJobs
     multi = []
     for state, jobs of allJobs.jobs
       prefix = "bull:#{state}:"
