@@ -71,14 +71,15 @@ class ExpressBull
 
   jobs: (state, callback) ->
     ideally = errify callback
-    await @store.jobsByState state, ideally defer list
-    await @store.jobsInList list,   ideally defer jobs
-    await @store.formatJobs jobs,   ideally defer jobs
 
-    if state is "active"
-      await @store.getProgressForJobs jobs, ideally defer jobs
+    await @store.jobsByState state,         ideally defer list
+    await @store.jobsInList list,           ideally defer jobs
+    await @store.formatJobs jobs,           ideally defer jobs
+    await @store.getDataForJobs jobs,       ideally defer jobs
+    await @store.getStackTraceForJobs jobs, ideally defer jobs
+    await @store.getProgressForJobs jobs,   ideally defer jobs if state is "active"
+    await @store.getStatusCounts            ideally defer counts
 
-    await @store.getStatusCounts ideally defer counts
     callback null, {jobs, counts}
 
 

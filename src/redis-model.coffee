@@ -239,6 +239,19 @@ class RedisModel
     await @redis.hgetall "bull:#{state}:id", ideally defer err, result
     callback null, result
 
+  dataForJobs: (jobs, callback) ->
+    ideally = errify callback
+
+    await @redis.hgetall "bull:#{state}:id", ideally defer err, result
+    callback null, result
+
+    multi = for job in jobs
+      ["hget", "bull:#{job.state}:#{job.id}", "data"]
+
+    await (@redis.multi multi).exec ideally defer results
+    job.data = JSON.parse results[i] for job, i in jobs
+    callback null, jobs
+
   progressForJobs: (jobs, callback) ->
     ideally = errify callback
 
@@ -247,6 +260,16 @@ class RedisModel
 
     await (@redis.multi multi).exec ideally defer results
     job.progress = results[i] for job, i in jobs
+    callback null, jobs
+
+  stacktraceForJobs: (jobs) ->
+    ideally = errify callback
+
+    multi = for job in jobs
+      ["hget", "bull:#{job.state}:#{job.id}", "stacktrace"]
+
+    await (@redis.multi multi).exec ideally defer results
+    job.stacktrace = results[i] for job, i in jobs
     callback null, jobs
 
   delayTimeForJobs: (jobs, callback) ->
