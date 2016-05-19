@@ -1,6 +1,5 @@
 express    = require "express"
 errify     = require "errify"
-GetJobs    = require "./get_jobs"
 
 
 class ExpressBull
@@ -18,7 +17,6 @@ class ExpressBull
     @Store = require "./redis-model"
     @Store.setup @redisClient
 
-    @getJobs = GetJobs @Store
     bindRoutes()
 
   bindRoutes: ->
@@ -31,54 +29,57 @@ class ExpressBull
     @router.get "/:state",             @state
     @router.del "/:state",             @deleteByState
 
-  getHandler: (state) -> (req, res, next) ->
-    ideally = errify next
-    await @getJobs state, ideally defer results
-    res.json results
-
-  getJobs: (state) ->
-    await @Store.statusKeys state, ideally defer list
-    await @Store.jobsInList list,  ideally defer keys
-    await @Store.formatKeys keys,  ideally defer keys
-
-    if state is "active"
-      await @Store.getProgressForKeys keys, ideally defer keys
-
-    await @Store.getStatusCounts ideally defer counts
-    callback null, {keys, counts}
-
-  dataById: (req, res, next) ->
-    ideally = errify next
-    {id, type} = req.params
-
-    await @Store.dataById type, id, ideally defer results
-    res.json message: results
-
-  makePendingById: (req, res, next) ->
-    ideally = errify next
-    {id, type} = req.params
-
-    await @Store.makePendingById type, id, ideally defer results
-    res.json message: results
-
-  deleteById: (req, res, next) ->
-    ideally = errify next
-    {id, type} = req.params
-
-    await @Store.deleteById type, id, ideally defer results
-    res.json message: results
-
-  deleteByStatus: (req, res, next) ->
-    ideally = errify next
-    {type} = req.params
-
-    await @Store.deleteByStatus type, ideally defer results
-    res.json message: results
-
   queues: (req, res, next) ->
     ideally = errify next
     await @Store.queues ideally defer results
     res.json results
+
+  makePendingById: (req, res, next) ->
+    ideally = errify next
+    {id, state} = req.params
+
+    await @Store.makePendingById state, id, ideally defer results
+    res.json message: results
+
+  deleteById: (req, res, next) ->
+    ideally = errify next
+    {id, state} = req.params
+
+    await @Store.deleteById state, id, ideally defer results
+    res.json message: results
+
+  deleteByState: (req, res, next) ->
+    ideally = errify next
+    {state} = req.params
+
+    await @Store.deleteByState state, ideally defer results
+    res.json message: results
+
+  dataById: (req, res, next) ->
+    ideally = errify next
+    {id, state} = req.params
+
+    await @Store.dataById state, id, ideally defer results
+    res.json message: results
+
+  state: (req, res, next) ->
+    ideally = errify next
+    {state} = req.params
+
+    await @jobs state, ideally defer results
+    res.json results
+
+  jobs: (state, callback) ->
+    ideally = errify callback
+    await @Store.jobsByState state, ideally defer list
+    await @Store.jobsInList list,  ideally defer jobs
+    await @Store.formatJobs jobs,  ideally defer jobs
+
+    if state is "active"
+      await @Store.getProgressForJobs jobs, ideally defer jobs
+
+    await @Store.getStatusCounts ideally defer counts
+    callback null, {jobs, counts}
 
 
 module.exports = ExpressBull

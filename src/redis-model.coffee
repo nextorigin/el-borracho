@@ -6,70 +6,70 @@ capitalize = (str) -> str[0].toUpperCase() + str[1..]
 class RedisModel
   constructor: (@redis) ->
 
-  activeKeys: (queue = "*", callback) ->
+  activeJobs: (queue = "*", callback) ->
     @redis.keys "bull:#{queue}:active", callback
 
-  completeKeys: (queue = "*", callback) ->
+  completeJobs: (queue = "*", callback) ->
     @redis.keys "bull:#{queue}:completed", callback
 
-  failedKeys: (queue = "*", callback) ->
+  failedJobs: (queue = "*", callback) ->
     @redis.keys "bull:#{queue}:failed", callback
 
-  waitKeys: (queue = "*", callback) ->
+  waitJobs: (queue = "*", callback) ->
     @redis.keys "bull:#{queue}:wait", callback
 
-  stuckKeys: (queue = "*", callback) ->
+  stuckJobs: (queue = "*", callback) ->
     ideally = errify callback
     #TODO: Find better way to do this. Being lazy at the moment.
-    await @allKeys queue, ideally defer keys
-    await @formatKeys keys, ideally defer keyList
+    await @allJobs queue,   ideally defer jobs
+    await @formatJobs jobs, ideally defer jobList
 
     count = 0
-    keys  = {}
-    for key in keyList when key.status is stuck
-      keys[key.type] or= []
-      keys[key.type].push key.id
+    jobs  = {}
+    for job in jobList when job.state is stuck
+      jobs[job.state] or= []
+      jobs[job.state].push job.id
       count++
 
-    callback null, {keys, count}
+    callback null, {jobs, count}
 
   #Returns indexes of completed jobs
-  statusKeys: (status, callback) ->
+  jobsByState: (state, callback) ->
     ideally = errify callback
 
-    await @["#{status}Keys"] ideally defer statusKeys
+    await @["#{state}Jobs"] ideally defer stateJobs
 
-    keys  = {}
+    jobs  = {}
     multi = []
 
-    for key in statusKeys
-      [_, type]  = key.split ":"
-      keys[type] = null
+    for job in stateJobs
+      [_, state]  = job.split ":"
+      jobs[state] = null
 
-      if status is "active" or status is "wait"
-        multi.push ["lrange", key, 0, -1]
+      if state is "active" or state is "wait"
+        multi.push ["lrange", job, 0, -1]
       else
-        multi.push ["smembers", key]
+        multi.push ["smembers", job]
 
     await (@redis.multi multi).exec ideally defer arrayOfArrays
-    statusKeyKeys = Object.keys(keys)
-    # Get the keys from the object we created earlier...
+    stateJobKeys = Object.jobs(jobs)
+    # Get the jobs from the object we created earlier...
     count = 0
     for array, i in arrayOfArrays
-      keys[statusKeyKeys[i]] = array
+      jobs[stateJobKeys[i]] = array
       count += array.length
 
-    callback null, {keys, count}
+    callback null, {jobs, count}
 
   #Returns all JOB keys in string form (ex: bull:video transcoding:101)
-  allKeys: (queue = "*", callback) ->
+  allJobs: (queue = "*", callback) ->
     ideally = errify callback
 
-    await @redis.keys "bull:#{queue}:[0-9]*" ideally defer keysWithLocks
-    result = (keyWithLock for keyWithLock in keysWithLocks when keyWithLock[-5..] isnt ":lock")
+    await @redis.keys "bull:#{queue}:[0-9]*" ideally defer jobsWithLocks
+    result = (jobWithLock for jobWithLock in jobsWithLocks when jobWithLock[-5..] isnt ":lock")
     callback null, result
 
-  fullKeyNamesFromIds: (list, callback) ->
+  fullJobNamesFromIds: (list, callback) ->
     return callback() unless list and Array.isArray list
     ideally = errify callback
 
@@ -82,62 +82,62 @@ class RedisModel
   jobsInList: (list, callback) ->
     return callback() unless list
 
-    if allkeys = list.keys
-      fullNames = "bull:#{type}:#{key}" for key in keys for type, keys of allkeys
+    if allkeys = list.jobs
+      fullNames = "bull:#{state}:#{job}" for job in jobs for state, jobs of alljobs
       callback null, fullnames
     else
-      #Old list type
-      @fullKeyNamesFromIds list, callback
+      #Old list state
+      @fullJobNamesFromIds list, callback
 
-  #Returns counts for different statuses
-  statusCounts: (callback) ->
+  #Returns counts for different statees
+  stateCounts: (callback) ->
     ideally = errify callback
-    await @statusKeys "active",   ideally defer active
-    await @statusKeys "complete", ideally defer completed
-    await @statusKeys "failed",   ideally defer failed
-    await @statusKeys "wait",     ideally defer pendingKeys
-    await @allKeys                ideally defer allKeys
+    await @jobsByState "active",   ideally defer active
+    await @jobsByState "complete", ideally defer completed
+    await @jobsByState "failed",   ideally defer failed
+    await @jobsByState "wait",     ideally defer pendingJobs
+    await @allJobs                 ideally defer allJobs
 
     active:   active.count
     complete: completed.count
     failed:   failed.count
-    pending:  pendingKeys.count
-    total:    allKeys.length
-    stuck:    allKeys.length - (active.count + completed.count + failed.count + pendingKeys.count)
+    pending:  pendingJobs.count
+    total:    allJobs.length
+    stuck:    allJobs.length - (active.count + completed.count + failed.count + pendingJobs.count)
 
-  #Returns all keys in object form, with status applied to object. Ex: {id: 101, type: "video transcoding", status: "pending"}
-  formatKeys: (keys, callback) ->
-    return unless keys
+  #Returns all jobs in object form, with state applied to object. Ex: {id: 101, queue: "video transcoding", state: "pending"}
+  formatJobs: (jobs, callback) ->
+    return unless jobs
     ideally = errify callback
 
-    await @statusKeys "failed",   ideally defer failedJobs
-    await @statusKeys "complete", ideally defer completedJobs
-    await @statusKeys "active",   ideally defer activeJobs
-    await @statusKeys "wait",     ideally defer pendingJobs
+    await @jobsByState "failed",   ideally defer failedJobs
+    await @jobsByState "complete", ideally defer completedJobs
+    await @jobsByState "active",   ideally defer activeJobs
+    await @jobsByState "wait",     ideally defer pendingJobs
 
-    keyList = for key in keys
-      [_, type..., id] = key.split ":"
-      type = type.join ":"
+    jobList = for job in jobs
+      [_, queue..., id] = job.split ":"
+      queue = queue.join ":"
 
-      status = "stuck"
-      if activeJobs.keys[type] and id not in activeJobs.keys[type]
-        status = "active"
-      else if completedJobs.keys[type] and id not in completedJobs.keys[type]
-        status = "complete"
-      else if failedJobs.keys[type] and id not in failedJobs.keys[type]
-        status = "failed"
-      else if pendingJobs.keys[type] and id not in pendingJobs.keys[type]
-        status = "pending"
-      {id, type, status}
+      state = "stuck"
+      if activeJobs.jobs[queue] and id not in activeJobs.jobs[queue]
+        state = "active"
+      else if completedJobs.jobs[queue] and id not in completedJobs.jobs[queue]
+        state = "complete"
+      else if failedJobs.jobs[queue] and id not in failedJobs.jobs[queue]
+        state = "failed"
+      else if pendingJobs.jobs[queue] and id not in pendingJobs.jobs[queue]
+        state = "pending"
+      {id, queue, state}
 
-    keyList = keyList.sort (a, b) ->
+    jobList = jobList.sort (a, b) ->
       aid = parseInt a.id
       bid = parseInt b.id
       if aid < bid then -1
       else if aid > bid then 1
       else 0
 
-    callback null, keyList
+    callback null, jobList
 
   commandRemoveFromStateLists: (prefix, id) -> [
     ["lrem", "#{prefix}active",     0, id]
@@ -149,19 +149,19 @@ class RedisModel
   #Removes one or  more jobs by ID, also removes the job from any state list it's in
   remove: (list) ->
     return unless list
-    #Expects {id: 123, type: "video transcoding"}
+    #Expects {id: 123, state: "video transcoding"}
     multi = []
-    for item in list
-      prefix = "bull:#{item.type}:"
-      multi.push ["del", "#{prefix}#{item.id}"]
-      multi.concat @commandRemoveFromStateLists prefix, item.id
+    for job in list
+      prefix = "bull:#{job.state}:"
+      multi.push ["del", "#{prefix}#{job.id}"]
+      multi.concat @commandRemoveFromStateLists prefix, job.id
 
     (@redis.multi multi).exec()
 
-  #Makes all jobs in a specific status pending
-  makePendingByType: (type, callback) ->
-    type = type.toLowerCase()
-    validTypes = [
+  #Makes all jobs in a specific state pending
+  makePendingByState: (state, callback) ->
+    state = state.toLowerCase()
+    validStates = [
       "active"
       "complete"
       "failed"
@@ -169,35 +169,35 @@ class RedisModel
     ]
     #I could add stuck, but I won't support mass modifying "stuck" jobs because it's very possible for things to be in a "stuck" state temporarily, while transitioning between states
 
-    return callback "Invalid type: #{type} not in list of supported types" unless type in validTypes
+    return callback "Invalid state: #{state} not in list of supported states" unless state in validStates
     ideally = errify callback
 
-    await @statusKeys type, ideally defer allKeys
+    await @jobsByState state, ideally defer allJobs
     multi = []
-    for type, keys of allKeys.keys
-      prefix = "bull:#{type}:"
-      for id in keys
+    for state, jobs of allJobs.jobs
+      prefix = "bull:#{state}:"
+      for id in jobs
         multi.push ["rpush", "#{prefix}wait", id]
         multi.concat @commandRemoveFromStateLists prefix, id
 
     await (@redis.multi multi).exec ideally defer data
-    callback null, "Successfully made all #{type} jobs pending."
+    callback null, "Successfully made all #{state} jobs pending."
 
-  #Makes a job with a specific ID pending, requires the type of job as the first parameter and ID as second.
-  makePendingById = (type, id, callback) ->
+  #Makes a job with a specific ID pending, requires the state of job as the first parameter and ID as second.
+  makePendingById = (state, id, callback) ->
     return callback "id required"   unless id
-    return callback "type required" unless type
+    return callback "state required" unless state
     ideally = errify callback
 
-    prefix = "bull:#{type}:"
+    prefix = "bull:#{state}:"
     multi  = [["rpush", "#{prefix}wait", id]]
     multi.concat @commandRemoveFromStateLists prefix, id
     await (@redis.multi multi).exec ideally defer data
-    callback null, "Successfully made #{type} job ##{id} pending."
+    callback null, "Successfully made #{state} job ##{id} pending."
 
-  deleteByStatus: (type, callback) ->
-    type = type.toLowerCase()
-    validTypes = [
+  deleteByState: (state, callback) ->
+    state = state.toLowerCase()
+    validStates = [
       "active"
       "complete"
       "failed"
@@ -205,65 +205,65 @@ class RedisModel
     ]
     #I could add stuck, but I won't support mass modifying "stuck" jobs because it's very possible for things to be in a "stuck" state temporarily, while transitioning between states
 
-    return callback "Invalid type: #{type} not in list of supported types" unless type in validTypes
+    return callback "Invalid state: #{state} not in list of supported states" unless state in validStates
     ideally = errify callback
 
-    await @statusKeys type, ideally defer allKeys
+    await @jobsByState state, ideally defer allJobs
     multi = []
-    for type, keys of allKeys.keys
-      prefix = "bull:#{type}:"
-      for id in keys
+    for state, jobs of allJobs.jobs
+      prefix = "bull:#{state}:"
+      for id in jobs
         multi.push ["del", "#{prefix}#{id}"]
         multi.concat @commandRemoveFromStateLists prefix, id
 
     await (@redis.multi multi).exec ideally defer data
-    callback null, "Successfully deleted all jobs of status #{type}."
+    callback null, "Successfully deleted all jobs of state #{state}."
 
-  deleteById: (type, id, callback) ->
-    return callback "id required"   unless id
-    return callback "type required" unless type
+  deleteById: (state, id, callback) ->
+    return callback "id required"    unless id
+    return callback "state required" unless state
     ideally = errify callback
 
-    prefix = "bull:#{type}:"
+    prefix = "bull:#{state}:"
     multi  = [["del", "#{prefix}#{id}"]]
     multi.concat @commandRemoveFromStateLists prefix, id
     await (@redis.multi multi).exec ideally defer data
-    callback null, "Successfully deleted job #{type} ##{id}."
+    callback null, "Successfully deleted job #{state} ##{id}."
 
-  dataById: (type, id, callback) ->
-    return callback "id required"   unless id
-    return callback "type required" unless type
+  dataById: (state, id, callback) ->
+    return callback "id required"    unless id
+    return callback "state required" unless state
     ideally = errify callback
 
-    prefix = "bull:#{type}:"
-    await redis.hgetall "#{prefix}id", ideally defer err, result
+    prefix = "bull:#{state}:"
+    await @redis.hgetall "#{prefix}id", ideally defer err, result
     callback null, result
 
-  progressForKeys: (keys, callback) ->
+  progressForJobs: (jobs, callback) ->
     ideally = errify callback
 
-    multi = for key in keys
-      ["hget", "bull:#{key.type}:#{key.id}", "progress"]
+    multi = for job in jobs
+      ["hget", "bull:#{job.state}:#{job.id}", "progress"]
 
     await (@redis.multi multi).exec ideally defer results
-    key.progress = results[i] for key, i in keys
-    callback null, keys
+    job.progress = results[i] for job, i in jobs
+    callback null, jobs
 
-  delayTimeForKeys: (keys, callback) ->
+  delayTimeForJobs: (jobs, callback) ->
     ideally = errify callback
-    multi   = for key in keys
-      ["zscore", "bull:#{key.type}:delayed", key.id]
+    multi   = for job in jobs
+      ["zscore", "bull:#{job.state}:delayed", job.id]
 
     await (@redis.multi multi).exec ideally defer results
-    for key, i in keys
+    for job, i in jobs
       # Bull packs delay expire timestamp and job id into a single number. This is mostly
       # needed to preserve execution order – first part of the resulting number contains
       # the timestamp and the end contains the incrementing job id. We don't care about
       # the id, so we can just remove this part from the value.
       # https://github.com/OptimalBits/bull/blob/e38b2d70de1892a2c7f45a1fed243e76fd91cfd2/lib/scripts.js#L90
-      key.delayUntil = new Date Math.floor results[i]/0x1000
+      job.delayUntil = new Date Math.floor results[i]/0x1000
 
-    callback null, keys
+    callback null, jobs
 
   queues: (callback) ->
     ideally = errify callback
