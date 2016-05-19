@@ -11,11 +11,11 @@ class ExpressBull
   ]
 
   constructor: ({@router, @redisClient}) ->
-    @router or= new express.Router
     throw new Error "redisClient required" unless @redisClient
 
-    @Store = require "./redis-model"
-    @Store.setup @redisClient
+    Store     = require "./redis-model"
+    @store    = new Store @redisClient
+    @router or= new express.Router
 
     bindRoutes()
 
@@ -31,35 +31,35 @@ class ExpressBull
 
   queues: (req, res, next) ->
     ideally = errify next
-    await @Store.queues ideally defer results
+    await @store.queues ideally defer results
     res.json results
 
   makePendingById: (req, res, next) ->
     ideally = errify next
     {id, state} = req.params
 
-    await @Store.makePendingById state, id, ideally defer results
+    await @store.makePendingById state, id, ideally defer results
     res.json message: results
 
   deleteById: (req, res, next) ->
     ideally = errify next
     {id, state} = req.params
 
-    await @Store.deleteById state, id, ideally defer results
+    await @store.deleteById state, id, ideally defer results
     res.json message: results
 
   deleteByState: (req, res, next) ->
     ideally = errify next
     {state} = req.params
 
-    await @Store.deleteByState state, ideally defer results
+    await @store.deleteByState state, ideally defer results
     res.json message: results
 
   dataById: (req, res, next) ->
     ideally = errify next
     {id, state} = req.params
 
-    await @Store.dataById state, id, ideally defer results
+    await @store.dataById state, id, ideally defer results
     res.json message: results
 
   state: (req, res, next) ->
@@ -71,14 +71,14 @@ class ExpressBull
 
   jobs: (state, callback) ->
     ideally = errify callback
-    await @Store.jobsByState state, ideally defer list
-    await @Store.jobsInList list,  ideally defer jobs
-    await @Store.formatJobs jobs,  ideally defer jobs
+    await @store.jobsByState state, ideally defer list
+    await @store.jobsInList list,   ideally defer jobs
+    await @store.formatJobs jobs,   ideally defer jobs
 
     if state is "active"
-      await @Store.getProgressForJobs jobs, ideally defer jobs
+      await @store.getProgressForJobs jobs, ideally defer jobs
 
-    await @Store.getStatusCounts ideally defer counts
+    await @store.getStatusCounts ideally defer counts
     callback null, {jobs, counts}
 
 
