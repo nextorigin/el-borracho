@@ -65,7 +65,7 @@ class RedisModel
   allJobs: (queue = "*", callback) ->
     ideally = errify callback
 
-    await @redis.keys "bull:#{queue}:[0-9]*" ideally defer jobsWithLocks
+    await @redis.keys "bull:#{queue}:[0-9]*", ideally defer jobsWithLocks
     result = (jobWithLock for jobWithLock in jobsWithLocks when jobWithLock[-5..] isnt ":lock")
     callback null, result
 
@@ -276,7 +276,7 @@ class RedisModel
       active  = []
       stalled = []
       for job in allActive
-        await @redis.get "#{name}:#{job}:lock" ideally defer lock
+        await @redis.get "#{name}:#{job}:lock", ideally defer lock
         if lock? then active.push  job
         else          stalled.push job
 
