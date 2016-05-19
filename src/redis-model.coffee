@@ -249,5 +249,49 @@ class RedisModel
     key.progress = results[i] for key, i in keys
     callback null, keys
 
+  delayTimeForKeys: (keys, callback) ->
+    ideally = errify callback
+    multi   = for key in keys
+      ["zscore", "bull:#{key.type}:delayed", key.id]
+
+    await (@redis.multi multi).exec ideally defer results
+    for key, i in keys
+      # Bull packs delay expire timestamp and job id into a single number. This is mostly
+      # needed to preserve execution order – first part of the resulting number contains
+      # the timestamp and the end contains the incrementing job id. We don't care about
+      # the id, so we can just remove this part from the value.
+      # https://github.com/OptimalBits/bull/blob/e38b2d70de1892a2c7f45a1fed243e76fd91cfd2/lib/scripts.js#L90
+      key.delayUntil = new Date Math.floor results[i]/0x1000
+
+    callback null, keys
+
+  queues: (callback) ->
+    ideally = errify callback
+
+    await @redis.keys "bull:*:id", ideally defer queues
+    for queue in queues
+      name = queue[..-3]
+
+      await @redis.lrange name + ":active", 0, -1, ideally defer allActive
+      active  = []
+      stalled = []
+      for job in allActive
+        await @redis.get "#{name}:#{job}:lock" ideally defer lock
+        if lock? then active.push  job
+        else          stalled.push job
+
+      await @redis.llen  "#{name}:wait",      ideally defer pending
+      await @redis.zcard "#{name}:delayed",   ideally defer delayed
+      await @redis.scard "#{name}:completed", ideally defer completed
+      await @redis.scard "#{name}:failed",    ideally defer failed
+
+      callback null,
+        name:      name[5..]
+        active:    active.length
+        stalled:   stalled.length
+        pending:   pending
+        delayed:   delayed
+        completed: completed
+        failed:    failed
 
 module.exports = RedisModel
