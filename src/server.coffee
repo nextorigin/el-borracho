@@ -1,6 +1,6 @@
 Redis    = require "redis"
 Skeleton = require "nextorigin-express-skeleton"
-Borracho = require "./express-bull"
+Borracho = require "./el-borracho"
 
 
 class ElBorrachoServer extends Skeleton

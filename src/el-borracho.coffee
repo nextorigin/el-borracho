@@ -3,7 +3,7 @@ override   = require "method-override"
 errify     = require "errify"
 
 
-class ExpressBull
+class ElBorracho
   constructor: ({@router, @redisClient}) ->
     throw new Error "redisClient required" unless @redisClient
 
@@ -126,4 +126,4 @@ class ExpressBull
     res.json results
 
 
-module.exports = ExpressBull
+module.exports = ElBorracho

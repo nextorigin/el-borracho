@@ -1,24 +1,24 @@
 {
-  "name": "express-bull",
-  "version": "1.1.1",
+  "name": "el-borracho",
+  "version": "2.0.0",
   "description": "Express 4 router containing an API for bull job queue",
-  "main": "lib/index.js",
+  "main": "lib/el-borracho.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/keyvanfatehi/express-bull.git"
+    "url": "https://github.com/nextorigin/el-borracho.git"
   },
   "keywords": [
     "bull"
   ],
-  "author": "Keyvan Fatehi <keyvanfatehi@gmail.com>",
-  "license": "ISC",
+  "author": "doublerebel",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/keyvanfatehi/express-bull/issues"
+    "url": "https://github.com/nextorigin/el-borracho/issues"
   },
-  "homepage": "https://github.com/keyvanfatehi/express-bull",
+  "homepage": "https://github.com/nextorigin/el-borracho",
   "dependencies": {
     "express": "^4.13.4",
     "method-override": "^2.3.5"
