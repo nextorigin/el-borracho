@@ -95,3 +95,20 @@ describe "BullModel", ->
       await queue.count().asCallback ideally defer count
       expect(count).to.equal 1
       queue.empty().then(queue.close()).asCallback done
+
+
+describe "RedisModel", ->
+  client   = null
+  instance = null
+  beforeEach ->
+    client   = redis.createClient()
+    instance = new RedisModel client
+
+  afterEach ->
+    client   = null
+    instance = null
+
+  describe "##constructor", ->
+    it "should set redis on the model", ->
+      expect(instance.redis).to.equal client
+
