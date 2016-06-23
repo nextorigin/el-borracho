@@ -110,6 +110,8 @@ describe "BullModel", ->
 
 
 describe "RedisModel", ->
+  queuename = "test"
+
   client   = null
   instance = null
   beforeEach ->
@@ -123,4 +125,37 @@ describe "RedisModel", ->
   describe "##constructor", ->
     it "should set redis on the model", ->
       expect(instance.redis).to.equal client
+
+  describe "##jobs", ->
+
+  describe "##idsAndCountByState", ->
+    queue     = null
+    job       = null
+
+    it "should callback with error if state is not valid", (done) ->
+      await instance.idsAndCountByState null, "badstate", defer err, _
+      expect(err.toString()).to.contain "Invalid state"
+      done()
+
+    validStates = ["active", "completed", "delayed", "failed", "wait"] #, "stuck"]
+    for state in validStates then do (state) ->
+      it "should return all jobs of state #{state}", (done) ->
+        ideally   = errify done
+        bullModel = new BullModel client
+        data      = {name: "testjob"}
+
+        await bullModel.createJobInQueue queuename, data, ideally defer job
+        queue = bullModel.queues[queuename]
+
+        if state is "active"
+          await (queue.moveJob "wait", "active").asCallback ideally defer()
+        else if state is "delayed"
+          await (job.moveToDelayed Date.now() + 1000 * 10).asCallback ideally defer()
+        else unless state is "wait"
+          await (job._moveToSet state).asCallback ideally defer()
+
+        await instance.idsAndCountByState queuename, state, ideally defer {ids, count}
+        expect(count).to.equal 1
+
+        qCleaner(queue).asCallback done
 
