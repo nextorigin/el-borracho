@@ -109,6 +109,23 @@ describe "BullModel", ->
       qCleaner(queue).asCallback done
 
 
+fakeJob = (name, data, state = "wait", callback) ->
+  ideally   = errify callback
+  bullModel = new BullModel redis.createClient()
+
+  await bullModel.createJobInQueue name, data, ideally defer job
+  queue = bullModel.queues[name]
+
+  if state is "active"
+    await (queue.moveJob "wait", "active").asCallback ideally defer()
+  else if state is "delayed"
+    await (job.moveToDelayed Date.now() + 1000 * 10).asCallback ideally defer()
+  else unless state is "wait"
+    await (job._moveToSet state).asCallback ideally defer()
+
+  callback null, {queue, job}
+
+
 describe "RedisModel", ->
   queuename = "test"
 
@@ -141,18 +158,8 @@ describe "RedisModel", ->
     for state in validStates then do (state) ->
       it "should return all jobs of state #{state}", (done) ->
         ideally   = errify done
-        bullModel = new BullModel client
         data      = {name: "testjob"}
-
-        await bullModel.createJobInQueue queuename, data, ideally defer job
-        queue = bullModel.queues[queuename]
-
-        if state is "active"
-          await (queue.moveJob "wait", "active").asCallback ideally defer()
-        else if state is "delayed"
-          await (job.moveToDelayed Date.now() + 1000 * 10).asCallback ideally defer()
-        else unless state is "wait"
-          await (job._moveToSet state).asCallback ideally defer()
+        await fakeJob queuename, data, state, ideally defer {queue, job}
 
         await instance.idsAndCountByState queuename, state, ideally defer {ids, count}
         expect(count).to.equal 1
@@ -166,28 +173,23 @@ describe "RedisModel", ->
   describe "##allKeys", ->
     it "should return all keys from all queues by default", (done) ->
       ideally   = errify done
-      bullModel = new BullModel client
       data      = {name: "testjob"}
 
-      await bullModel.createJobInQueue queuename, data, ideally defer job
-      await bullModel.createJobInQueue "test2",   data, ideally defer job
-      queue  = bullModel.queues[queuename]
-      queue2 = bullModel.queues["test2"]
+      await fakeJob queuename, data, null, ideally defer {queue, job}
+      await fakeJob "test2",   data, null, ideally defer queueAndJob2
 
       await instance.allKeys null, ideally defer keys
       expect(keys.length).to.equal 2
 
       qCleaner queue
-        .then -> qCleaner queue2
+        .then -> qCleaner queueAndJob2.queue
         .asCallback done
 
     it "should return all keys from a specific queue", (done) ->
       ideally   = errify done
-      bullModel = new BullModel client
       data      = {name: "testjob"}
 
-      await bullModel.createJobInQueue queuename, data, ideally defer job
-      queue = bullModel.queues[queuename]
+      await fakeJob queuename, data, null, ideally defer {queue, job}
 
       await instance.allKeys queuename, ideally defer keys
       expect(keys.length).to.equal 1
