@@ -4,7 +4,7 @@
   "description": "Express 4 router containing an API for bull job queue",
   "main": "lib/el-borracho.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/.bin/mocha --compilers coffee:iced-coffee-script/register test/index.coffee"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,8 @@
     "method-override": "^2.3.5"
   },
   "devDependencies": {
-    "redis": "^2.6.0-2"
+    "chai": "^3.5.0",
+    "redis": "^2.6.0-2",
+    "sinon": "^1.17.4"
   }
 }
