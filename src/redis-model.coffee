@@ -22,7 +22,7 @@ class RedisModel
 
   idsAndCountByState: (queue = "*", state, callback) ->
     validStates = ["active", "completed", "delayed", "failed", "wait", "stuck"]
-    return callback "Invalid state: #{state} not in list of supported states" unless state in validStates
+    return callback new Error "Invalid state: #{state} not in list of supported states" unless state in validStates
     return @idsAndCountByStuck queue, state, callback if state is "stuck"
     ideally = errify callback
 
@@ -164,7 +164,7 @@ class RedisModel
     validStates = ["active", "completed", "delayed", "failed", "wait"]
     #I could add stuck, but I won't support mass modifying "stuck" jobs because it's very possible for things to be in a "stuck" state temporarily, while transitioning between states
 
-    return callback "Invalid state: #{state} not in list of supported states" unless state in validStates
+    return callback new Error "Invalid state: #{state} not in list of supported states" unless state in validStates
     ideally = errify callback
 
     await @idsAndCountByState queue, state, ideally defer {ids}
@@ -194,7 +194,7 @@ class RedisModel
     validStates = ["active", "completed", "delayed", "failed", "wait"]
     #I could add stuck, but I won't support mass modifying "stuck" jobs because it's very possible for things to be in a "stuck" state temporarily, while transitioning between states
 
-    return callback "Invalid state: #{state} not in list of supported states" unless state in validStates
+    return callback new Error "Invalid state: #{state} not in list of supported states" unless state in validStates
     ideally = errify callback
 
     await @idsAndCountByState queue, state, ideally defer {ids}
