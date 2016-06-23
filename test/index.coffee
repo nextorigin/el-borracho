@@ -195,3 +195,39 @@ describe "RedisModel", ->
       expect(keys.length).to.equal 1
 
       qCleaner(queue).asCallback done
+
+  describe "##listsByState", ->
+    queue  = null
+    queue2 = null
+
+    before (done) ->
+      ideally   = errify done
+      data      = {name: "testjob"}
+
+      validStates = ["active", "completed", "delayed", "failed", "wait"]
+      for state in validStates
+        await fakeJob queuename, data, state, ideally defer queueAndJob
+        await fakeJob "test2",   data, state, ideally defer queueAndJob2
+        queue  = queueAndJob.queue
+        queue2 = queueAndJob2.queue
+
+      setTimeout done, 150 ## slight delay to ensure all lists have time for creation
+
+    after (done) ->
+      qCleaner queue
+        .then -> qCleaner queue2
+        .asCallback done
+
+    for name in ["*", "test", "test2"] then do (name) ->
+
+      validStates = ["active", "completed", "delayed", "failed", "wait"]
+      for state in validStates then do (state) ->
+        it "should return all lists in queue #{name} of state #{state}", (done) ->
+          ideally = errify done
+          await instance.listsByState name, state, ideally defer lists
+          if name is "*"
+            expect(lists.length).to.equal 2
+          else
+            expect(lists.length).to.equal 1
+
+          done()
