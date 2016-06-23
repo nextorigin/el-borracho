@@ -159,3 +159,37 @@ describe "RedisModel", ->
 
         qCleaner(queue).asCallback done
 
+  describe "##idsAndCountByStuck", ->
+
+  describe "##stuckKeys", ->
+
+  describe "##allKeys", ->
+    it "should return all keys from all queues by default", (done) ->
+      ideally   = errify done
+      bullModel = new BullModel client
+      data      = {name: "testjob"}
+
+      await bullModel.createJobInQueue queuename, data, ideally defer job
+      await bullModel.createJobInQueue "test2",   data, ideally defer job
+      queue  = bullModel.queues[queuename]
+      queue2 = bullModel.queues["test2"]
+
+      await instance.allKeys null, ideally defer keys
+      expect(keys.length).to.equal 2
+
+      qCleaner queue
+        .then -> qCleaner queue2
+        .asCallback done
+
+    it "should return all keys from a specific queue", (done) ->
+      ideally   = errify done
+      bullModel = new BullModel client
+      data      = {name: "testjob"}
+
+      await bullModel.createJobInQueue queuename, data, ideally defer job
+      queue = bullModel.queues[queuename]
+
+      await instance.allKeys queuename, ideally defer keys
+      expect(keys.length).to.equal 1
+
+      qCleaner(queue).asCallback done
