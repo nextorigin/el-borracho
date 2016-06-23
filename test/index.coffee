@@ -231,3 +231,28 @@ describe "RedisModel", ->
             expect(lists.length).to.equal 1
 
           done()
+
+  describe "##fullKeysForList", ->
+    it "should find queues for unknown ids", (done) ->
+      ideally = errify done
+      data    = {name: "testjob"}
+      await fakeJob queuename, data, null, ideally defer {queue, job}
+      list = ids: "*": [job.jobId]
+
+      await instance.fullKeysForList list, ideally defer fullKeys
+      [fullKey] = fullKeys
+      expect(fullKey).to.equal "bull:#{queuename}:#{job.jobId}"
+
+      qCleaner(queue).asCallback done
+
+    it "should return the full keynames for ids", (done) ->
+      ideally = errify done
+      list    = ids: {}
+      id      = 7
+      list.ids[queuename] = [id]
+
+      await instance.fullKeysForList list, ideally defer fullKeys
+      [fullKey] = fullKeys
+      expect(fullKey).to.equal "bull:#{queuename}:#{id}"
+
+      done()
