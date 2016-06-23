@@ -51,6 +51,20 @@ describe "ElBorracho", ->
       expect(bond.called).to.be.true
 
 
+queuename = "test"
+
+## https://github.com/OptimalBits/bull/issues/83
+qCleaner  = (queue) ->
+  clean = queue.clean.bind queue, 0
+  queue.pause()
+       .then clean 'completed'
+       .then clean 'active'
+       .then clean 'delayed'
+       .then clean 'failed'
+       .then -> queue.empty()
+       # .then -> queue.close()
+
+
 describe "BullModel", ->
   client   = null
   instance = null
@@ -77,24 +91,22 @@ describe "BullModel", ->
   describe "##createJobInQueue", ->
     it "should create a new bull queue if none exists", (done) ->
       ideally   = errify done
-      queuename = "test"
       data      = {name: "testjob"}
 
       await instance.createJobInQueue queuename, data, ideally defer job
       queue = instance.queues[queuename]
       expect(queue).to.exist
-      queue.empty().then(queue.close()).asCallback done
+      qCleaner(queue).asCallback done
 
     it "should add a job to a bull queue", (done) ->
       ideally   = errify done
-      queuename = "test"
       data      = {name: "testjob"}
 
       await instance.createJobInQueue queuename, data, ideally defer job
       queue = instance.queues[queuename]
       await queue.count().asCallback ideally defer count
       expect(count).to.equal 1
-      queue.empty().then(queue.close()).asCallback done
+      qCleaner(queue).asCallback done
 
 
 describe "RedisModel", ->
