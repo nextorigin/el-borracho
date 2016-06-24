@@ -256,3 +256,18 @@ describe "RedisModel", ->
       expect(fullKey).to.equal "bull:#{queuename}:#{id}"
 
       done()
+
+  describe "##remove", ->
+    it "should remove jobs by id", (done) ->
+      ideally = errify done
+      data    = {name: "testjob"}
+      await fakeJob queuename, data, null, ideally defer {queue, job}
+
+      formattedJob =
+        id: job.jobId
+        queue: queuename
+      await instance.remove [formattedJob], ideally defer()
+      await instance.unknownKeysForIds [formattedJob.id], ideally defer keys
+      expect(keys).to.be.empty
+
+      done()
