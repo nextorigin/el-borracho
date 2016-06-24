@@ -147,7 +147,7 @@ class RedisModel
   ]
 
   #Removes one or more jobs by ID, also removes the job from any state list it's in
-  remove: (jobs) ->
+  remove: (jobs, callback) ->
     return unless jobs
     #Expects {id: 123, queue: "video transcoding"}
     multi = []
@@ -157,7 +157,7 @@ class RedisModel
       multi.push ["del", "#{prefix}#{id}"]
       multi.concat @commandRemoveFromStateLists prefix, id
 
-    (@redis.multi multi).exec()
+    (@redis.multi multi).exec callback
 
   #Makes all jobs in a specific state pending
   makePendingByState: (queue = "*", state, callback) ->
