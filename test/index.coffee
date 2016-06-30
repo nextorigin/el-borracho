@@ -600,3 +600,38 @@ describe "RedisModel", ->
       qCleaner queue
         .then -> qCleaner queueAndJob2.queue
         .asCallback done
+
+  describe "##queues", ->
+    it "should get all queues with counts", (done) ->
+      ideally = errify done
+      data    = {name: "testjob", foo: "bar"}
+
+      await fakeJob queuename, data, "active",  ideally defer {queue, job}
+      await fakeJob "test2",   data, "delayed", ideally defer queueAndJob2
+
+      await instance.queues ideally defer queues
+      expected =
+        test:
+          active:    0
+          completed: 0
+          delayed:   0
+          failed:    0
+          name:      "test"
+          stuck:     1
+          wait:      0
+        test2:
+          active:    0
+          completed: 0
+          delayed:   1
+          failed:    0
+          name:      "test2"
+          stuck:     0
+          wait:      0
+
+      expect(queues).to.deep.equal expected
+
+      qCleaner queue
+        .then -> qCleaner queueAndJob2.queue
+        .asCallback done
+
+  describe "##stateCounts", ->
