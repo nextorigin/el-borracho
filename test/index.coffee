@@ -295,6 +295,50 @@ describe "RedisModel", ->
 
       done()
 
+  describe "##unknownKeysForIds", ->
+
+  describe "##formatJobs", ->
+    queues   = []
+    jobIds   = []
+
+    before (done) ->
+      ideally   = errify done
+      data      = {name: "testjob"}
+
+      validStates = ["active", "completed", "delayed", "failed", "wait"]
+      for state in validStates
+        await fakeJob queuename, data, state, ideally defer {queue, job}
+        queues = [queue]
+        jobIds.push job.jobId
+
+      done()
+
+    after (done) ->
+      ideally = errify done
+
+      for queue in queues
+        await qCleaner(queue).asCallback ideally defer _
+      queues  = []
+      jobIds  = []
+
+      done()
+
+    it "should return jobs formatted with state, sorted by id", (done) ->
+      ideally = errify done
+      list    = ids: {}
+      list.ids[queuename] = jobIds
+      await instance.fullKeysForList list, ideally defer keys
+
+      await instance.formatJobs queuename, keys, ideally defer jobs
+      lastId = 0
+      for job in jobs
+        expect(job.state).to.exist
+        id = Number job.id
+        expect(id).to.be.above lastId
+        lastId = id
+
+      done()
+
   describe "##remove", ->
     it "should remove jobs by id", (done) ->
       ideally = errify done
