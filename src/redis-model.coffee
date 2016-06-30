@@ -258,7 +258,7 @@ class RedisModel
       ["hget", "bull:#{job.queue}:#{job.id}", "progress"]
 
     await (@redis.multi multi).exec ideally defer results
-    job.progress = results[i] for job, i in jobs
+    job.progress = JSON.parse results[i] for job, i in jobs
     callback null, jobs
 
   stacktraceForJobs: (jobs, callback) ->
@@ -268,7 +268,7 @@ class RedisModel
       ["hget", "bull:#{job.queue}:#{job.id}", "stacktrace"]
 
     await (@redis.multi multi).exec ideally defer results
-    job.stacktrace = results[i] for job, i in jobs
+    job.stacktrace = JSON.parse results[i] for job, i in jobs
     callback null, jobs
 
   delayTimeForJobs: (jobs, callback) ->
