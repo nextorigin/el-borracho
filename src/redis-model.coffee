@@ -294,7 +294,7 @@ class RedisModel
     await @redis.keys "bull:*:id", ideally defer queues
     for queue in queues
       name = queue[5..-4]
-      await @stateCounts name, ideally defer allCounts[queue]
+      await @stateCounts name, ideally defer allCounts[name]
 
     callback null, allCounts
 
