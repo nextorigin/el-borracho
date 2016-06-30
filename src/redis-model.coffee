@@ -157,7 +157,7 @@ class RedisModel
       {id, queue} = job
       prefix = "bull:#{queue}:"
       multi.push ["del", "#{prefix}#{id}"]
-      multi.concat @commandRemoveFromStateLists prefix, id
+      multi = multi.concat @commandRemoveFromStateLists prefix, id
 
     (@redis.multi multi).exec callback
 
