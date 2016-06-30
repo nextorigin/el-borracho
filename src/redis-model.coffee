@@ -172,7 +172,7 @@ class RedisModel
     await @idsAndCountByState queue, state, ideally defer {ids}
     multi = []
     for queuename, list of ids
-      prefix = "bull:#{queue}:"
+      prefix = "bull:#{queuename}:"
       for id in list
         multi.push ["rpush", "#{prefix}wait", id]
         multi.concat @commandRemoveFromStateLists prefix, id
