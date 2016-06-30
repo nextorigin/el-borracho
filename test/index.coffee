@@ -484,3 +484,59 @@ describe "RedisModel", ->
       await instance.allKeys null, ideally defer keys
       expect(keys).to.be.empty
       done()
+
+  describe "##dataById", ->
+    it "should callback with error if missing queue parameter", (done) ->
+      await instance.dataById null, 1, defer err, _
+      expect(err.toString()).to.contain "queue required"
+      done()
+
+    it "should callback with error if missing id parameter", (done) ->
+      await instance.dataById "queuename", null, defer err, _
+      expect(err.toString()).to.contain "id required"
+      done()
+
+    it "should get from a specific queue data for a job by id", (done) ->
+      ideally = errify done
+      data    = {name: "testjob", foo: "bar"}
+
+      await fakeJob queuename, data, "active", ideally defer {queue, job}
+
+      await instance.dataById queuename, job.jobId, ideally defer allJobData
+      allJobDataInterface =
+        attempts:     1
+        attemptsMade: 0
+        # data:         {}
+        delay:         0
+        opts:         {}
+        progress:     0
+        # returnvalue:  null
+        stacktrace:   []
+        timestamp:    1467326353545
+
+      for own property, value of allJobDataInterface
+        type = if Array.isArray value then "array" else typeof value
+        expect(allJobData[property]).to.be.a type
+      expect(allJobData.data).to.deep.equal data
+
+      qCleaner(queue).asCallback done
+
+  describe "##dataForJobs", ->
+    it "should get data for jobs", (done) ->
+      ideally = errify done
+      data    = {name: "testjob", foo: "bar"}
+
+      await fakeJob queuename, data, "active",  ideally defer {queue, job}
+      await fakeJob "test2",   data, "delayed", ideally defer queueAndJob2
+
+      jobs = [
+        {queue: job.queue.name,          id: job.jobId}
+        {queue: queueAndJob2.queue.name, id: queueAndJob2.job.jobId}
+      ]
+      await instance.dataForJobs jobs, ideally defer jobsWithData
+      for jobWithData in jobsWithData
+        expect(jobWithData.data).to.deep.equal data
+
+      qCleaner queue
+        .then -> qCleaner queueAndJob2.queue
+        .asCallback done
