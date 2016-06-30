@@ -199,6 +199,7 @@ describe "RedisModel", ->
         await fakeJob queuename, data, state, ideally defer {queue, job}
 
         await instance.idsAndCountByState queuename, state, ideally defer {ids, count}
+        expect(ids[queuename]).to.contain(job.jobId)
         expect(count).to.equal 1
 
         qCleaner(queue).asCallback done
@@ -299,12 +300,15 @@ describe "RedisModel", ->
       ideally = errify done
       data    = {name: "testjob"}
       await fakeJob queuename, data, null, ideally defer {queue, job}
+      await fakeJob queuename, data, null, ideally defer queueAndJob2
 
-      formattedJob =
-        id: job.jobId
-        queue: queuename
-      await instance.remove [formattedJob], ideally defer()
-      await instance.unknownKeysForIds [formattedJob.id], ideally defer keys
+      formattedJobs = [
+        {id: job.jobId,              queue: queuename}
+        {id: queueAndJob2.job.jobId, queue: queuename}
+      ]
+      ids = (job.id for job in formattedJobs)
+      await instance.remove formattedJobs, ideally defer()
+      await instance.unknownKeysForIds ids, ideally defer keys
       expect(keys).to.be.empty
 
       done()
