@@ -181,7 +181,7 @@ class RedisModel
     callback null, "Successfully made all #{queue} jobs pending."
 
   #Makes a job with a specific ID pending, requires the queue of job as the first parameter and ID as second.
-  makePendingById = (queue, id, callback) ->
+  makePendingById: (queue, id, callback) ->
     return callback "queue required" unless queue
     return callback "id required"    unless id
     ideally = errify callback
@@ -202,13 +202,13 @@ class RedisModel
     await @idsAndCountByState queue, state, ideally defer {ids}
     multi = []
     for queuename, list of ids
-      prefix = "bull:#{queue}:"
+      prefix = "bull:#{queuename}:"
       for id in list
         multi.push ["del", "#{prefix}#{id}"]
         multi.concat @commandRemoveFromStateLists prefix, id
 
     await (@redis.multi multi).exec ideally defer data
-    callback null, "Successfully deleted all jobs of queue #{queue}."
+    callback null, "Successfully deleted all #{state} jobs of queue #{queue}."
 
   deleteById: (queue, id, callback) ->
     return callback "queue required" unless queue
