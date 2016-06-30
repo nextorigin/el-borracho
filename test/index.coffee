@@ -391,3 +391,26 @@ describe "RedisModel", ->
       expect(count).to.equal 1
 
       qCleaner(queue).asCallback done
+
+  describe "##makePendingById", ->
+    it "should callback with error if missing queue parameter", (done) ->
+      await instance.makePendingById null, 1, defer err, _
+      expect(err.toString()).to.contain "queue required"
+      done()
+
+    it "should callback with error if missing id parameter", (done) ->
+      await instance.makePendingById "queuename", null, defer err, _
+      expect(err.toString()).to.contain "id required"
+      done()
+
+    it "should make pending in a specific queue a job by id", (done) ->
+      ideally = errify done
+      data    = {name: "testjob"}
+
+      await fakeJob queuename, data, "active", ideally defer {queue, job}
+      await instance.makePendingById queuename, job.jobId, ideally defer _
+      await instance.idsAndCountByState queuename, "wait", ideally defer {ids, count}
+      expect(ids[queuename]).to.contain job.jobId
+      expect(count).to.equal 1
+
+      qCleaner(queue).asCallback done
