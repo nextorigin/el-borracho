@@ -540,3 +540,63 @@ describe "RedisModel", ->
       qCleaner queue
         .then -> qCleaner queueAndJob2.queue
         .asCallback done
+
+  describe "##progressForJobs", ->
+    it "should get stacktrace for jobs", (done) ->
+      ideally = errify done
+      data    = {name: "testjob", foo: "bar"}
+
+      await fakeJob queuename, data, "active",  ideally defer {queue, job}
+      await fakeJob "test2",   data, "delayed", ideally defer queueAndJob2
+
+      jobs = [
+        {queue: job.queue.name,          id: job.jobId}
+        {queue: queueAndJob2.queue.name, id: queueAndJob2.job.jobId}
+      ]
+      await instance.progressForJobs jobs, ideally defer jobsWithProgress
+      for jobWithProgress in jobsWithProgress
+        expect(jobWithProgress.progress).to.equal 0
+
+      qCleaner queue
+        .then -> qCleaner queueAndJob2.queue
+        .asCallback done
+
+  describe "##stacktraceForJobs", ->
+    it "should get stacktrace for jobs", (done) ->
+      ideally = errify done
+      data    = {name: "testjob", foo: "bar"}
+
+      await fakeJob queuename, data, "active",  ideally defer {queue, job}
+      await fakeJob "test2",   data, "delayed", ideally defer queueAndJob2
+
+      jobs = [
+        {queue: job.queue.name,          id: job.jobId}
+        {queue: queueAndJob2.queue.name, id: queueAndJob2.job.jobId}
+      ]
+      await instance.stacktraceForJobs jobs, ideally defer jobsWithStacktrace
+      for jobWithStacktrace in jobsWithStacktrace
+        expect(jobWithStacktrace.stacktrace).to.be.an "array"
+
+      qCleaner queue
+        .then -> qCleaner queueAndJob2.queue
+        .asCallback done
+
+  describe "##delayTimeForJobs", ->
+    it "should get delay time for jobs", (done) ->
+      ideally = errify done
+      data    = {name: "testjob", foo: "bar"}
+
+      await fakeJob queuename, data, "active",  ideally defer {queue, job}
+      await fakeJob "test2",   data, "delayed", ideally defer queueAndJob2
+
+      jobs = [
+        {queue: job.queue.name,          id: job.jobId}
+        {queue: queueAndJob2.queue.name, id: queueAndJob2.job.jobId}
+      ]
+      await instance.delayTimeForJobs jobs, ideally defer jobsWithDelay
+      for jobWithDelay in jobsWithDelay
+        expect(jobWithDelay.delayUntil).to.be.an.instanceof Date
+
+      qCleaner queue
+        .then -> qCleaner queueAndJob2.queue
+        .asCallback done
