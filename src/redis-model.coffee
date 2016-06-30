@@ -3,7 +3,8 @@ errify = require "errify"
 
 queuenameMayHaveColon = (key) ->
   [_, queue..., id] = key.split ":"
-  [(queue.join ":"), id]
+  [(queue.join ":"), Number id]
+
 
 class RedisModel
   constructor: (@redis) ->
@@ -45,7 +46,8 @@ class RedisModel
 
     await (@redis.multi multi).exec ideally defer idsByList
     for idsOfList, i in idsByList
-      ids[queues[i]] = idsOfList
+      NumberIdsOfList = (Number id for id in idsOfList)
+      ids[queues[i]] = NumberIdsOfList
       count += idsOfList.length
 
     callback null, {ids, count}
