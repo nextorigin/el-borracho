@@ -234,8 +234,12 @@ class RedisModel
     return callback "id required"    unless id
     ideally = errify callback
 
-    await @redis.hgetall "bull:#{queue}:#{id}", ideally defer err, result
-    callback null, result
+    await @redis.hgetall "bull:#{queue}:#{id}", ideally defer result
+    allJobData = {}
+    for property, stringified of result
+      allJobData[property] = JSON.parse stringified
+
+    callback null, allJobData
 
   dataForJobs: (jobs, callback) ->
     ideally = errify callback
