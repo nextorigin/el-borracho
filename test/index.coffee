@@ -356,3 +356,38 @@ describe "RedisModel", ->
       expect(keys).to.be.empty
 
       done()
+
+  describe "##makePendingByState", ->
+    it "should callback with error if state is not valid", (done) ->
+      await instance.makePendingByState null, "badstate", defer err, _
+      expect(err.toString()).to.contain "Invalid state"
+      done()
+
+    it "should make pending in all queues all jobs of a specific state", (done) ->
+      ideally = errify done
+      data    = {name: "testjob"}
+
+      await fakeJob queuename, data, "active", ideally defer {queue, job}
+      await fakeJob "test2", data, "active", ideally defer queueAndJob2
+
+      await instance.makePendingByState null, "active", ideally defer _
+      await instance.idsAndCountByState null, "wait", ideally defer {ids, count}
+      expect(ids[queuename]).to.contain job.jobId
+      expect(ids["test2"]).to.contain queueAndJob2.job.jobId
+      expect(count).to.equal 2
+
+      qCleaner queue
+        .then -> qCleaner queueAndJob2.queue
+        .asCallback done
+
+    it "should make pending in a specific queue all jobs of a specific state", (done) ->
+      ideally = errify done
+      data    = {name: "testjob"}
+
+      await fakeJob queuename, data, "active", ideally defer {queue, job}
+      await instance.makePendingByState queuename, "active", ideally defer _
+      await instance.idsAndCountByState queuename, "wait", ideally defer {ids, count}
+      expect(ids[queuename]).to.contain job.jobId
+      expect(count).to.equal 1
+
+      qCleaner(queue).asCallback done
