@@ -414,3 +414,73 @@ describe "RedisModel", ->
       expect(count).to.equal 1
 
       qCleaner(queue).asCallback done
+
+  describe "##deleteByState", ->
+    it "should callback with error if state is not valid", (done) ->
+      await instance.deleteByState null, "badstate", defer err, _
+      expect(err.toString()).to.contain "Invalid state"
+      done()
+
+    it "should delete in all queues all jobs of a specific state", (done) ->
+      ideally = errify done
+      data    = {name: "testjob"}
+
+      await fakeJob queuename, data, "active", ideally defer {queue, job}
+      await fakeJob "test2", data, "active", ideally defer queueAndJob2
+
+      await instance.deleteByState null, "active", ideally defer _
+      await instance.allKeys null, ideally defer keys
+      expect(keys).to.be.empty
+      done()
+
+    it "should delete in a specific queue all jobs of a specific state", (done) ->
+      ideally = errify done
+      data    = {name: "testjob"}
+
+      await fakeJob queuename, data, "active", ideally defer {queue, job}
+      await instance.deleteByState queuename, "active", ideally defer _
+      await instance.allKeys null, ideally defer keys
+      expect(keys).to.be.empty
+      done()
+
+  describe "##deleteById", ->
+    it "should callback with error if missing queue parameter", (done) ->
+      await instance.deleteById null, 1, defer err, _
+      expect(err.toString()).to.contain "queue required"
+      done()
+
+    it "should callback with error if missing id parameter", (done) ->
+      await instance.deleteById "queuename", null, defer err, _
+      expect(err.toString()).to.contain "id required"
+      done()
+
+    it "should delete in a specific queue a job by id", (done) ->
+      ideally = errify done
+      data    = {name: "testjob"}
+
+      await fakeJob queuename, data, "active", ideally defer {queue, job}
+      await instance.deleteById queuename, job.jobId, ideally defer _
+      await instance.allKeys null, ideally defer keys
+      expect(keys).to.be.empty
+      done()
+
+  describe "##deleteAll", ->
+    it "should delete in all queues all jobs", (done) ->
+      ideally = errify done
+      data    = {name: "testjob"}
+
+      await fakeJob queuename, data, "active", ideally defer {queue, job}
+      await instance.deleteAll null, ideally defer _
+      await instance.allKeys null, ideally defer keys
+      expect(keys).to.be.empty
+      done()
+
+    it "should delete in a specific queue all jobs", (done) ->
+      ideally = errify done
+      data    = {name: "testjob"}
+
+      await fakeJob queuename, data, "active", ideally defer {queue, job}
+      await instance.deleteAll queuename, ideally defer _
+      await instance.allKeys null, ideally defer keys
+      expect(keys).to.be.empty
+      done()
