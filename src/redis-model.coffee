@@ -222,7 +222,12 @@ class RedisModel
     callback null, "Successfully deleted job #{queue} ##{id}."
 
   deleteAll: (queue = "*", callback) ->
-    @deleteById queue, "*", callback
+    ideally = errify callback
+
+    prefix = "bull:#{queue}:*"
+    multi  = [["eval", "for _,k in ipairs(redis.call('keys','#{prefix}')) do redis.call('del',k) end", 0]]
+    await (@redis.multi multi).exec ideally defer data
+    callback null, "Successfully deleted all jobs of queue #{queue}."
 
   dataById: (queue, id, callback) ->
     return callback "queue required" unless queue
