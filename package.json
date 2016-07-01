@@ -21,7 +21,8 @@
   "homepage": "https://github.com/nextorigin/el-borracho",
   "dependencies": {
     "express": "^4.13.4",
-    "method-override": "^2.3.5"
+    "method-override": "^2.3.5",
+    "source-map-support": "^0.4.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",

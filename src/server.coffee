@@ -1,3 +1,4 @@
+require "source-map-support/register"
 Redis    = require "redis"
 path     = require "path"
 Skeleton = require "nextorigin-express-skeleton"
