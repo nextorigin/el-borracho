@@ -181,6 +181,58 @@ describe "RedisModel", ->
       expect(instance.redis).to.equal client
 
   describe "##jobs", ->
+    it "should return from all queues all jobs of a specific state", (done) ->
+      ideally = errify done
+      data    = {name: "testjob", foo: "bar"}
+      state   = "active"
+
+      await fakeJob queuename, data, state, ideally defer {queue, job}
+      await fakeJob "test2",   data, state, ideally defer queueAndJob2
+
+      await instance.jobs null, state, ideally defer jobs
+      jobInterface =
+        id:         0
+        progress:   0
+        queue:      "name"
+        # stacktrace: []
+
+      expect(jobs.length).to.equal 2
+      for jobWithData in jobs
+        expect(jobWithData.state).to.equal state
+        expect(jobWithData.data).to.deep.equal data
+        expect(jobWithData.stacktrace).to.be.an "array"
+        for property, value of jobInterface
+          expect(jobWithData[property]).to.be.a typeof value
+
+      qCleaner queue
+        .then -> qCleaner queueAndJob2.queue
+        .asCallback done
+
+    it "should return from a specific queue all jobs of a specific state", (done) ->
+      ideally = errify done
+      data    = {name: "testjob", foo: "bar"}
+      state   = "active"
+
+      await fakeJob queuename, data, state, ideally defer {queue, job}
+      await fakeJob queuename, data, state, ideally defer queueAndJob2
+
+      await instance.jobs queuename, state, ideally defer jobs
+      jobInterface =
+        id:         0
+        progress:   0
+        queue:      "name"
+        # stacktrace: []
+
+      expect(jobs.length).to.equal 2
+      for jobWithData in jobs
+        expect(jobWithData.queue).to.equal queuename
+        expect(jobWithData.state).to.equal state
+        expect(jobWithData.data).to.deep.equal data
+        expect(jobWithData.stacktrace).to.be.an "array"
+        for property, value of jobInterface
+          expect(jobWithData[property]).to.be.a typeof value
+
+      qCleaner(queue).asCallback done
 
   describe "##idsAndCountByState", ->
     queue     = null
