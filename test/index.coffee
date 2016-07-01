@@ -406,6 +406,7 @@ describe "RedisModel", ->
 
       await instance.formatJobs queuename, keys, ideally defer jobs
       lastId = 0
+      expect(jobs.length).to.equal 5
       for job in jobs
         expect(job.state).to.exist
         id = Number job.id
