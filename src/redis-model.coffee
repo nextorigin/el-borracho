@@ -120,7 +120,7 @@ class RedisModel
 
   #Returns all jobs in object form, with state applied to object. Ex: {id: 101, queue: "video transcoding", state: "pending"}
   formatJobs: (queue = "*", keys, callback) ->
-    return unless keys
+    return callback() unless keys
     ideally = errify callback
 
     states = ["active", "completed", "delayed", "failed", "wait", "stuck"]
@@ -152,7 +152,7 @@ class RedisModel
 
   #Removes one or more jobs by ID, also removes the job from any state list it's in
   remove: (jobs, callback) ->
-    return unless jobs
+    return callback() unless jobs
     #Expects {id: 123, queue: "video transcoding"}
     multi = []
     for job in jobs
