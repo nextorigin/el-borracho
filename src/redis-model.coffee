@@ -5,6 +5,8 @@ queuenameMayHaveColon = (key) ->
   [_, queue..., id] = key.split ":"
   [(queue.join ":"), Number id]
 
+flatten = (array) -> Array::concat array...
+
 
 class RedisModel
   constructor: (@redis) ->
@@ -105,7 +107,7 @@ class RedisModel
       @unknownKeysForIds queue, callback
     else if ids = list.ids
       fullKeys = ("bull:#{queuename}:#{id}" for id in queue for queuename, queue of ids)
-      callback null, fullKeys[0]
+      callback null, flatten fullKeys
 
   unknownKeysForIds: (ids, callback) ->
     return callback() unless ids and Array.isArray ids
