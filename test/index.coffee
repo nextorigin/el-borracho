@@ -323,6 +323,14 @@ describe "RedisModel", ->
           done()
 
   describe "##fullKeysForList", ->
+    it "should return early and empty if not provided keys", (done) ->
+      ideally = errify done
+
+      await instance.fullKeysForList null, ideally defer fullKeys
+      expect(fullKeys).to.be.empty
+
+      done()
+
     it "should find queues for unknown ids", (done) ->
       ideally = errify done
       data    = {name: "testjob"}
@@ -348,6 +356,13 @@ describe "RedisModel", ->
       done()
 
   describe "##unknownKeysForIds", ->
+    it "should return early and empty if not provided ids", (done) ->
+      ideally = errify done
+
+      await instance.unknownKeysForIds null, ideally defer fullKeys
+      expect(fullKeys).to.be.empty
+
+      done()
 
   describe "##formatJobs", ->
     queues   = []
@@ -375,6 +390,14 @@ describe "RedisModel", ->
 
       done()
 
+    it "should return early and empty if not provided keys", (done) ->
+      ideally = errify done
+
+      await instance.formatJobs null, null, ideally defer jobs
+      expect(jobs).to.be.empty
+
+      done()
+
     it "should return jobs formatted with state, sorted by id", (done) ->
       ideally = errify done
       list    = ids: {}
@@ -392,6 +415,14 @@ describe "RedisModel", ->
       done()
 
   describe "##remove", ->
+    it "should return early and empty if not provided jobs", (done) ->
+      ideally = errify done
+
+      await instance.remove null, ideally defer result
+      expect(result).to.be.empty
+
+      done()
+
     it "should remove jobs by id", (done) ->
       ideally = errify done
       data    = {name: "testjob"}
