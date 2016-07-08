@@ -27,16 +27,15 @@ class ElBorracho
 
   bindRoutes: ->
     state = ":state(active|completed|delayed|failed|wait|stuck)"
-    @router.get  "/#{state}/:id/pending",          @makePendingById
     @router.get  "/#{state}/pending",              @makeAllPendingByState
     @router.get  "/#{state}",                      @allByState
     @router.del  "/#{state}",                      @deleteAllByState
 
-    @router.get  "/:queue/#{state}/:id/pending",   @makePendingById
     @router.get  "/:queue/#{state}/pending",       @makePendingByState
-    @router.get  "/:queue/#{state}/:id",           @dataById
     @router.get  "/:queue/#{state}",               @state
     @router.del  "/:queue/#{state}",               @deleteByState
+    @router.get  "/:queue/:id/pending",            @makePendingById
+    @router.get  "/:queue/:id",                    @dataById
     @router.del  "/:queue/:id",                    @deleteById
     @router.post "/:queue",                        @create
     @router.del  "/:queue",                        @deleteAll
@@ -81,7 +80,7 @@ class ElBorracho
     ideally = errify next
     {id, queue, state} = req.params
 
-    await @store.dataById queue, state, id, ideally defer results
+    await @store.dataById queue, id, ideally defer results
     res.json message: results
 
   state: (req, res, next) =>
@@ -103,7 +102,7 @@ class ElBorracho
     ideally = errify next
     {id, queue, state} = req.params
 
-    await @store.deleteById queue, state, id, ideally defer results
+    await @store.deleteById queue, id, ideally defer results
     res.json message: results
 
   deleteAll: (req, res, next) =>
