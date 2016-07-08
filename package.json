@@ -5,7 +5,8 @@
   "main": "lib/el-borracho.js",
   "scripts": {
     "test": "mocha --recursive --compilers coffee:iced-coffee-script/register --require iced-coffee-coverage/register-istanbul test/index.coffee && istanbul report",
-    "build": "iced --bare --map --runtime node -o lib/ -c src/*"
+    "build": "iced --bare --map --runtime node -o lib/ -c src/*",
+    "start": "node lib/server.js"
   },
   "repository": {
     "type": "git",
