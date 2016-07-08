@@ -88,7 +88,7 @@ class ElBorracho
     {queue, state} = req.params
 
     await @store.jobs queue, state, ideally defer jobs
-    await @store.stateCounts        ideally defer counts
+    await @store.stateCounts queue, ideally defer counts
     res.json {jobs, counts}
 
   deleteByState: (req, res, next) =>
@@ -116,8 +116,9 @@ class ElBorracho
     return next new Error "job required" unless job = req.body
     ideally = errify next
 
-    job = [job] unless Array.isArray job
+    jobs = [job] unless Array.isArray job
     await @bull.createJobInQueue req.param.queue, job, ideally defer() for job in jobs
+    res.json message: "Sucessfully created jobs"
 
   queues: (req, res, next) =>
     ideally = errify next
