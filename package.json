@@ -4,7 +4,9 @@
   "description": "Express 4 router containing an API for bull job queue",
   "main": "lib/el-borracho.js",
   "scripts": {
-    "test": "mocha --recursive --compilers coffee:iced-coffee-script/register --require iced-coffee-coverage/register-istanbul test/ && istanbul report",
+    "test": "npm run test:modules && npm run test:coverage",
+    "test:modules": "mocha --recursive --compilers coffee:iced-coffee-script/register --require test/iced-coffee-coverage test/",
+    "test:coverage": "istanbul report",
     "build": "iced --bare --map --runtime node -o lib/ -c src/*",
     "start": "node lib/server.js"
   },
