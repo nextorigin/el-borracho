@@ -148,6 +148,13 @@ describe "RedisModel", ->
 
       setTimeout done, 150 ## slight delay to ensure all lists have time for creation
 
+    afterEach (done) ->
+      ideally = errify done
+      await instance.allKeys null, ideally defer keys
+      for key in keys
+        await instance.deleteById queuename, (key.split ":")[-1..][0], ideally defer _
+      done()
+
     after (done) ->
       qCleaner queue
         .then -> qCleaner queue2
@@ -223,6 +230,13 @@ describe "RedisModel", ->
         queues = [queue]
         jobIds.push job.jobId
 
+      done()
+
+    afterEach (done) ->
+      ideally = errify done
+      await instance.allKeys null, ideally defer keys
+      for key in keys
+        await instance.deleteById queuename, (key.split ":")[-1..][0], ideally defer _
       done()
 
     after (done) ->
