@@ -389,8 +389,8 @@ describe "RedisModel", ->
 
       await fakeJob queuename, data, "active", ideally defer {queue, job}
       await instance.deleteById queuename, job.jobId, ideally defer _
-      await instance.allKeys null, ideally defer keys
-      expect(keys).to.be.empty
+      await instance.dataById queuename, job.jobId, ideally defer data
+      expect(data).to.be.empty
       done()
 
   describe "##deleteAll", ->
