@@ -291,12 +291,12 @@ class RedisModel
 
   queues: (callback) ->
     ideally   = errify callback
-    allCounts = {}
+    allCounts = []
 
     await @redis.keys "bull:*:id", ideally defer queues
-    for queue in queues
+    for queue, i in queues
       name = queue[5..-4]
-      await @stateCounts name, ideally defer allCounts[name]
+      await @stateCounts name, ideally defer allCounts[i]
 
     callback null, allCounts
 
