@@ -82,7 +82,7 @@ class ElBorracho
     {id, queue, state} = req.params
 
     await @store.dataById queue, id, ideally defer results
-    res.json message: results
+    res.json results
 
   counts: (req, res, next) =>
     ideally = errify next
