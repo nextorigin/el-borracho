@@ -31,6 +31,7 @@ class ElBorracho
     @router.get  "/#{state}",                      @allByState
     @router.del  "/#{state}",                      @deleteAllByState
 
+    @router.get  "/:queue/counts",                 @counts
     @router.get  "/:queue/#{state}/pending",       @makePendingByState
     @router.get  "/:queue/#{state}",               @state
     @router.del  "/:queue/#{state}",               @deleteByState
@@ -83,13 +84,19 @@ class ElBorracho
     await @store.dataById queue, id, ideally defer results
     res.json message: results
 
+  counts: (req, res, next) =>
+    ideally = errify next
+    {queue} = req.params
+
+    await @store.stateCounts queue, ideally defer counts
+    res.json counts
+
   state: (req, res, next) =>
     ideally = errify next
     {queue, state} = req.params
 
     await @store.jobs queue, state, ideally defer jobs
-    await @store.stateCounts queue, ideally defer counts
-    res.json {jobs, counts}
+    res.json jobs
 
   deleteByState: (req, res, next) =>
     ideally = errify next
