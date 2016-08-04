@@ -18,7 +18,7 @@ class RedisModel
     await @fullKeysForList list,             ideally defer names unless state is "stuck"
     await @formatJobs queue, names,          ideally defer jobs
     await @dataForJobs jobs,                 ideally defer jobs
-    await @stacktraceForJobs jobs,           ideally defer jobs
+    await @stacktraceForJobs jobs,           ideally defer jobs if state is "failed"
     await @progressForJobs jobs,             ideally defer jobs if state is "active"
 
     callback null, jobs
