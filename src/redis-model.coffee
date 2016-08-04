@@ -23,6 +23,17 @@ class RedisModel
 
     callback null, jobs
 
+  jobsByQueue: (queue = "*", callback) ->
+    ideally = errify callback
+
+    await @allKeys queue,                    ideally defer names
+    await @formatJobs queue, names,          ideally defer jobs
+    await @dataForJobs jobs,                 ideally defer jobs
+    await @stacktraceForJobs jobs,           ideally defer jobs
+    await @progressForJobs jobs,             ideally defer jobs
+
+    callback null, jobs
+
   idsAndCountByState: (queue = "*", state, callback) ->
     validStates = ["active", "completed", "delayed", "failed", "wait", "stuck"]
     return callback new Error "Invalid state: #{state} not in list of supported states" unless state in validStates

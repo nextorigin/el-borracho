@@ -38,6 +38,7 @@ class ElBorracho
     @router.get  "/:queue/:id/pending",            @makePendingById
     @router.get  "/:queue/:id",                    @dataById
     @router.del  "/:queue/:id",                    @deleteById
+    @router.get  "/:queue",                        @all
     @router.post "/:queue",                        @create
     @router.del  "/:queue",                        @deleteAll
     @router.get  "/",                              @queues
@@ -118,6 +119,13 @@ class ElBorracho
 
     await @store.deleteAll queue, ideally defer results
     res.json message: results
+
+  all: (req, res, next) =>
+    ideally = errify next
+    {queue} = req.params
+
+    await @store.jobsByQueue queue, ideally defer results
+    res.json results
 
   create: (req, res, next) =>
     return next new Error "job required" unless job = req.body
