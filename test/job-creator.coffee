@@ -1,5 +1,6 @@
 Queue = require "bull"
 redis = require "redis"
+Stats = require "el-borracho-stats/worker"
 log   = console.log.bind console
 
 
@@ -8,17 +9,15 @@ class JobCreator
     @proteins = "carnitas brisket camarones".split " "
     @salsas   = "habanero chipotle tomatillo".split " "
     @client   = redis.createClient()
-    @queue    = Queue @queuename, createClient: => @client
-    @queue1   = Queue @queuename, createClient: => @client
-    @queue2   = Queue @queuename, createClient: => @client
-    @queue3   = Queue @queuename, createClient: => @client
-    @queue4   = Queue @queuename, createClient: => @client
 
-    @queue.process  @cookTaco
-    @queue1.process @cookTaco
-    @queue2.process @cookTaco
-    @queue3.process @cookTaco
-    @queue4.process @cookTaco
+    workers   = 5
+    queues    = for _ in [0..workers]
+      Queue @queuename, createClient: => @client
+
+    queue.process @cookTaco for queue in queues
+    [@queue] = queues
+    stats = new Stats {@queue}
+    stats.listen()
 
   cookTaco: (job, done) ->
     {data, queue} = job
