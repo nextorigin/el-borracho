@@ -8,6 +8,7 @@
     "test:modules": "mocha --recursive --compilers coffee:iced-coffee-script/register --require test/iced-coffee-coverage test/",
     "test:coverage": "istanbul report",
     "build": "iced --bare --map --runtime node -o lib/ -c src/*",
+    "watch": "iced --watch --bare --map --runtime node -o lib/ -c src/*",
     "start": "node lib/server.js"
   },
   "repository": {
