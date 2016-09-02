@@ -219,8 +219,8 @@ class RedisModel
     for queuename, list of ids
       prefix = "bull:#{queuename}:"
       for id in list
+        multi = multi.concat @commandRemoveFromStateLists prefix, id
         multi.push ["del", "#{prefix}#{id}"]
-        multi.concat @commandRemoveFromStateLists prefix, id
 
     await (@redis.multi multi).exec ideally defer data
     callback null, "Successfully deleted all #{state} jobs of queue #{queue}."
@@ -231,8 +231,8 @@ class RedisModel
     ideally = errify callback
 
     prefix = "bull:#{queue}:"
-    multi  = [["del", "#{prefix}#{id}"]]
-    multi.concat @commandRemoveFromStateLists prefix, id
+    multi  = @commandRemoveFromStateLists prefix, id
+    multi.push ["del", "#{prefix}#{id}"]
     await (@redis.multi multi).exec ideally defer data
     callback null, "Successfully deleted job #{queue} ##{id}."
 
