@@ -20,12 +20,28 @@ class JobCreator
     stats.listen()
 
   cookTaco: (job, done) ->
-    {data, queue} = job
+    {data, queue, jobId} = job
     {protein, salsa, cooktime, orderNumber} = data
     log "#{queue.name} ##{orderNumber}: #{protein}, #{salsa} cooking for #{(cooktime/1000).toFixed 2}s"
+
+    progress = 10
+    update = ->
+      job.progress progress
+      progress += 25
+
+    maybeThrow = ->
+      dice = Math.random()
+      done new Error "taco #{jobId} burned" if dice < 0.2
+
     wake = ->
       log "#{queue.name} ##{orderNumber}: #{protein}, #{salsa} served"
       done()
+
+    setTimeout update, cooktime/5
+    setTimeout update, cooktime/5 * 2
+    setTimeout update, cooktime/5 * 3
+    setTimeout update, cooktime/5 * 4
+    setTimeout maybeThrow, cooktime * Math.random()
     setTimeout wake, cooktime
 
   makeJob: (orderNumber) ->
