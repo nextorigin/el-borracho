@@ -1,47 +1,14 @@
-express    = require "express"
-override   = require "method-override"
 errify     = require "errify"
 
 
 class ElBorracho
-  constructor: ({@router, @redisClient}) ->
-    throw new Error "redisClient required" unless @redisClient
+  constructor: ({@redis}) ->
+    throw new Error "redis required" unless @redis
 
     Store     = require "./redis-model"
     Bull      = require "./bull-model"
-    @store    = new Store @redisClient
-    @bull     = new Bull @redisClient
-    @router or= new express.Router
-
-    @loadMiddleware()
-    @bindRoutes()
-
-  loadMiddleware: ->
-    @router.use override @override
-    @router.del = @router.delete
-
-  override: (req, res) ->
-    return unless method = req.body?._method
-    delete req.body._method
-    method
-
-  bindRoutes: ->
-    state = ":state(active|completed|delayed|failed|wait|stuck)"
-    @router.get  "/#{state}/pending",              @makeAllPendingByState
-    @router.get  "/#{state}",                      @allByState
-    @router.del  "/#{state}",                      @deleteAllByState
-
-    @router.get  "/:queue/counts",                 @counts
-    @router.get  "/:queue/#{state}/pending",       @makePendingByState
-    @router.get  "/:queue/#{state}",               @state
-    @router.del  "/:queue/#{state}",               @deleteByState
-    @router.get  "/:queue/:id/pending",            @makePendingById
-    @router.get  "/:queue/:id",                    @dataById
-    @router.del  "/:queue/:id",                    @deleteById
-    @router.get  "/:queue",                        @all
-    @router.post "/:queue",                        @create
-    @router.del  "/:queue",                        @deleteAll
-    @router.get  "/",                              @queues
+    @store    = new Store @redis
+    @bull     = new Bull @redis
 
   makeAllPendingByState: (req, res, next) =>
     ideally = errify next
