@@ -25,12 +25,13 @@ class ElBorrachoServer extends Skeleton
     @debug "initializing"
 
   bindRoutes: ->
-    @borracho = new Borracho {@redis}
+    mount = if @ui then "/jobs" else "/"
+    @borracho = new Borracho {@server, @redis, mount}
     if @ui
-      @app.use "/jobs", @borracho.router
+      @app.use mount, @borracho.router
       @app.get "/", (req, res, next) -> res.sendFile path.join uiPath, "index.html"
     else
-      @app.use "/", @borracho.router
+      @app.use mount, @borracho.router
 
 ebs = new ElBorrachoServer
 ebs.listen()
