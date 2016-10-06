@@ -1,7 +1,7 @@
 {
   "name": "el-borracho",
   "version": "2.0.0",
-  "description": "Express 4 router containing an API for bull job queue",
+  "description": "Express 4 router containing a REST and SSE API for Bull job queues",
   "main": "lib/el-borracho.js",
   "scripts": {
     "test": "npm run test:modules && npm run test:coverage",

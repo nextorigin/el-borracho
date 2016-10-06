@@ -1,30 +1,17 @@
-express-bull
-============
+# el-borracho
 
-Express 4 router containing an API for bull job queue, based heavily on [Matador](https://github.com/ShaneK/Matador). It uses less libraries and uses bluebird instead of Q as the promise library.
+Express 4 router containing a REST and SSE API for Bull job queues, based heavily on [express-bull][express-bull] and [Matador](https://github.com/ShaneK/Matador). It uses less libraries and uses Iced Coffeescript instead of bluebird for async handling.
 
-Designed for consumption by [react-bull](https://github.com/keyvanfatehi/react-bull)
+Designed for consumption by [el-borracho-ui][el-borracho-ui]
 
-### Usage
-
-`npm install --save express-bull`
-
-```js
-var redis = require('redis');
-var express = require('express');
-var expressBull = require('express-bull');
-
-var app = express();
-
-app.use('/jobs', expressBull({
-  router: express.Router(),
-  redisClient: redis.createClient()
-}))
-
-require('http').Server(app).listen(1337)
+## Installation
+```sh
+npm install --save el-borracho
 ```
 
-```
-$ curl http://localhost:1337/jobs/active
-{"keys":[],"counts":{"active":0,"complete":0,"failed":0,"pending":0,"total":0,"stuck":0}}
-```
+## License
+
+MIT
+
+  [express-bull]:  https://github.com/kfatehi/express-bull
+  [el-borracho-ui]:  https://github.com/nextorigin/el-borracho-ui
