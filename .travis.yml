@@ -7,5 +7,4 @@ node_js:
 services:
   - redis-server
 after_success:
-  - "npm run coverage-report"
   - "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
