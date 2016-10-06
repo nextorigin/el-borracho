@@ -131,7 +131,7 @@ describe "RedisModel", ->
     queue  = null
     queue2 = null
 
-    before (done) ->
+    beforeEach (done) ->
       ideally   = errify done
       data      = {name: "testjob"}
 
@@ -142,7 +142,7 @@ describe "RedisModel", ->
         queue  = queueAndJob.queue
         queue2 = queueAndJob2.queue
 
-      setTimeout done, 150 ## slight delay to ensure all lists have time for creation
+      done()
 
     afterEach (done) ->
       ideally = errify done
@@ -152,11 +152,12 @@ describe "RedisModel", ->
       done()
 
     after (done) ->
-      qCleaner queue
+      await qCleaner queue
         .then -> qCleaner queue2
         .asCallback done
 
-    for name in ["*", "test", "test2"] then do (name) ->
+    queues = ["*", "test", "test2"]
+    for name in queues then do (name) ->
 
       validStates = ["active", "completed", "delayed", "failed", "wait"]
       for state in validStates then do (state) ->
@@ -216,7 +217,7 @@ describe "RedisModel", ->
     queues   = []
     jobIds   = []
 
-    before (done) ->
+    beforeEach (done) ->
       ideally   = errify done
       data      = {name: "testjob"}
 
