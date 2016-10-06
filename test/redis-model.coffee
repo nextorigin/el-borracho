@@ -550,16 +550,7 @@ describe "RedisModel", ->
       await fakeJob "test2",   data, "delayed", ideally defer queueAndJob2
 
       await instance.queues ideally defer queues
-      expected =
-        test:
-          active:    0
-          completed: 0
-          delayed:   0
-          failed:    0
-          name:      "test"
-          stuck:     1
-          wait:      0
-        test2:
+      expected = [{
           active:    0
           completed: 0
           delayed:   1
@@ -567,6 +558,15 @@ describe "RedisModel", ->
           name:      "test2"
           stuck:     0
           wait:      0
+        },{
+          active:    0
+          completed: 0
+          delayed:   0
+          failed:    0
+          name:      "test"
+          stuck:     1
+          wait:      0
+        }]
 
       expect(queues).to.deep.equal expected
 
