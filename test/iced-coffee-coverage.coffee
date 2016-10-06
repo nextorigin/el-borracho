@@ -16,6 +16,7 @@ coffeeCoverage.register
     "/node_modules"
     "/.git"
     "/*.coffee"
+    "/helpers"
   ]
   coverageVar:  coverageVar
   writeOnExit:  writeOnExit
