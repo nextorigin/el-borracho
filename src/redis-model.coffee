@@ -99,16 +99,30 @@ class RedisModel
 
     callback null, stuck
 
+  scanRedis: (match, callback) ->
+    ideally = errify callback
+    result  = []
+
+    nextindex = 0
+    while nextindex?
+      await @redis.scan nextindex, "MATCH", match, ideally defer nextindexAndItems
+      [nextindex, items] = nextindexAndItems
+      result             = result.concat items
+      nextindex          = parseInt nextindex
+      if nextindex is 0 then nextindex = null
+
+    callback null, result
+
   #Returns all JOB keys in string form (ex: bull:video transcoding:101)
   allKeys: (queue = "*", callback) ->
     ideally = errify callback
 
-    await @redis.keys "bull:#{queue}:[0-9]*", ideally defer jobsWithLocks
+    await @scanRedis "bull:#{queue}:[0-9]*", ideally defer jobsWithLocks
     result = (jobWithLock for jobWithLock in jobsWithLocks when jobWithLock[-5..] isnt ":lock")
     callback null, result
 
   listsByState: (queue = "*", state, callback) ->
-    @redis.keys "bull:#{queue}:#{state}", callback
+    await @scanRedis "bull:#{queue}:#{state}", callback
 
   #Returns the job data from a list of job ids
   fullKeysForList: (list, callback) ->
@@ -124,10 +138,12 @@ class RedisModel
     return callback() unless ids and Array.isArray ids
     ideally = errify callback
 
-    multi = (["keys", "bull:*:#{id}"] for id in ids)
-    await (@redis.multi multi).exec ideally defer arrayOfArrays
-    result = (array[0] for array in arrayOfArrays when array.length is 1)
-    callback null, result
+    keys = []
+    for id in ids
+      await @scanRedis "bull:*:#{id}", ideally defer keymatches
+      keys = keys.concat keymatches
+
+    callback null, keys
 
   #Returns all jobs in object form, with state applied to object. Ex: {id: 101, queue: "video transcoding", state: "pending"}
   formatJobs: (queue = "*", keys, callback) ->
@@ -311,7 +327,7 @@ class RedisModel
     ideally   = errify callback
     allCounts = []
 
-    await @redis.keys "bull:*:id", ideally defer queues
+    await @scanRedis "bull:*:id", ideally defer queues
     for queue, i in queues
       name = queue[5..-4]
       await @stateCounts name, ideally defer allCounts[i]
