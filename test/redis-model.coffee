@@ -39,13 +39,11 @@ describe "RedisModel", ->
         id:         0
         progress:   0
         queue:      "name"
-        # stacktrace: []
 
       expect(jobs.length).to.equal 2
       for jobWithData in jobs
         expect(jobWithData.state).to.equal state
         expect(jobWithData.data).to.deep.equal data
-        expect(jobWithData.stacktrace).to.be.an "array"
         for property, value of jobInterface
           expect(jobWithData[property]).to.be.a typeof value
 
@@ -66,14 +64,12 @@ describe "RedisModel", ->
         id:         0
         progress:   0
         queue:      "name"
-        # stacktrace: []
 
       expect(jobs.length).to.equal 2
       for jobWithData in jobs
         expect(jobWithData.queue).to.equal queuename
         expect(jobWithData.state).to.equal state
         expect(jobWithData.data).to.deep.equal data
-        expect(jobWithData.stacktrace).to.be.an "array"
         for property, value of jobInterface
           expect(jobWithData[property]).to.be.a typeof value
 
