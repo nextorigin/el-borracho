@@ -12,14 +12,14 @@ describe "ElBorracho", ->
   instance = null
   beforeEach ->
     client   = redis.createClient()
-    instance = new ElBorracho redisClient: client
+    instance = new ElBorracho redis: client
 
   afterEach ->
     client = null
     instance = null
 
   describe "##constructor", ->
-    it "should throw an error unless redisClient is passed in", ->
+    it "should throw an error unless redis is passed in", ->
       newInstance = -> new ElBorracho
       expect(newInstance).to.throw Error
 
