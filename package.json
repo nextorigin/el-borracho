@@ -28,6 +28,7 @@
     "bull": "^1.0.0",
     "errify": "^1.0.0",
     "express": "^4.14.0",
+    "iced-runtime": "^1.0.3",
     "method-override": "^2.3.6",
     "source-map-support": "^0.4.3",
     "sseries-of-tubes": "^2.0.0"
