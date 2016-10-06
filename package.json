@@ -27,18 +27,18 @@
   "dependencies": {
     "bull": "^1.0.0",
     "errify": "^1.0.0",
-    "express": "^4.13.4",
-    "method-override": "^2.3.5",
-    "source-map-support": "^0.4.1",
+    "express": "^4.14.0",
+    "method-override": "^2.3.6",
+    "source-map-support": "^0.4.3",
     "sseries-of-tubes": "^2.0.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "iced-coffee-coverage": "^1.0.1",
+    "iced-coffee-coverage": "^1.0.3",
     "iced-coffee-script": "^108.0.11",
-    "istanbul": "^0.4.4",
-    "mocha": "^2.5.3",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.1.0",
     "redis": "^2.6.0-2",
-    "sinon": "^1.17.4"
+    "sinon": "^1.17.6"
   }
 }
