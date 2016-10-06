@@ -553,21 +553,22 @@ describe "RedisModel", ->
       expected = [{
           active:    0
           completed: 0
-          delayed:   1
-          failed:    0
-          name:      "test2"
-          stuck:     0
-          wait:      0
-        },{
-          active:    0
-          completed: 0
           delayed:   0
           failed:    0
           name:      "test"
           stuck:     1
           wait:      0
+        },{
+          active:    0
+          completed: 0
+          delayed:   1
+          failed:    0
+          name:      "test2"
+          stuck:     0
+          wait:      0
         }]
 
+      queues.sort (a, b) -> a.name.length - b.name.length
       expect(queues).to.deep.equal expected
 
       qCleaner queue
