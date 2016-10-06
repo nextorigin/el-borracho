@@ -4,7 +4,7 @@ ElBorracho     = require "./el-borracho"
 
 
 class ElBorrachoRouter
-  constructor: ({server, redis, @router}) ->
+  constructor: ({server, redis, @router, @mount}) ->
     @tubes    = new SSEriesOfTubes server
     @borracho = new ElBorracho {redis}
     @router or= new (require "express").Router
