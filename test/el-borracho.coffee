@@ -29,24 +29,5 @@ describe "ElBorracho", ->
     it "should initialize a BullModel instance", ->
       expect(instance.bull).to.be.an.instanceof BullModel
 
-    it "should initialize an express.Router instance", ->
-      expect(instance.router).to.exist
-
-    it "should accept an express.Router instance", ->
-      router   = new express.Router
-      instance = new ElBorracho {redisClient: client, router}
-      expect(instance.router).to.equal router
-
-    it "should run #loadMiddleware", ->
-      bond     = spy ElBorracho::, "loadMiddleware"
-      instance = new ElBorracho redisClient: client
-      bond.restore()
-      expect(bond.called).to.be.true
-
-    it "should run #bindRoutes", ->
-      bond     = spy ElBorracho::, "bindRoutes"
-      instance = new ElBorracho redisClient: client
-      bond.restore()
-      expect(bond.called).to.be.true
 
 
