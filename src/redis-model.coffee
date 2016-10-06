@@ -122,7 +122,7 @@ class RedisModel
     callback null, result
 
   listsByState: (queue = "*", state, callback) ->
-    await @scanRedis "bull:#{queue}:#{state}", callback
+    @scanRedis "bull:#{queue}:#{state}", callback
 
   #Returns the job data from a list of job ids
   fullKeysForList: (list, callback) ->
