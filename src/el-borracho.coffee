@@ -50,8 +50,8 @@ class ElBorracho
     {id, queue, state} = req.params
 
     await @store.dataById queue, id, ideally defer results
-    return next status: 404 unless results
-    res.json results
+    return next status: 404 unless results or req.accepts "text/event-stream"
+    res.json results or {}
 
   counts: (req, res, next) =>
     ideally = errify next
