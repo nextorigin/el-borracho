@@ -16,7 +16,7 @@ class RedisModel
 
     await @idsAndCountByState queue, state,  ideally defer list
     await @fullKeysForList list,             ideally defer names
-    await @formatJobs queue, names,          ideally defer jobs
+    await @formatJobsForState queue, state, names, ideally defer jobs
     await @dataForJobs jobs,                 ideally defer jobs
     await @stacktraceForJobs jobs,           ideally defer jobs if state is "failed"
     await @progressForJobs jobs,             ideally defer jobs if state is "active"
@@ -146,12 +146,13 @@ class RedisModel
     callback null, keys
 
   #Returns all jobs in object form, with state applied to object. Ex: {id: 101, queue: "video transcoding", state: "pending"}
-  formatJobs: (queue = "*", keys, callback) ->
-    return callback() unless keys
-    ideally = errify callback
+  formatJobsForState: (queue = "*", state, keys, callback) ->
+    @formatJobsForStates queue, [state], keys, callback
 
-    states = ["active", "completed", "delayed", "failed", "wait", "stuck"]
-    jobs   = []
+  formatJobsForStates: (queue = "*", states, keys, callback) ->
+    return callback() unless keys?.length
+    ideally = errify callback
+    jobs    = []
 
     for state in states
       await @idsAndCountByState queue, state, ideally defer {ids}
@@ -168,6 +169,10 @@ class RedisModel
       else 0
 
     callback null, jobs
+
+  formatJobs: (queue = "*", keys, callback) ->
+    states = ["active", "completed", "delayed", "failed", "wait", "stuck"]
+    @formatJobsForStates queue, states, keys, callback
 
   commandRemoveFromStateLists: (prefix, id) -> [
     ["lrem", "#{prefix}active",     0, id]
