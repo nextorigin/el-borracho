@@ -174,6 +174,31 @@ class RedisModel
     states = ["active", "completed", "delayed", "failed", "wait", "stuck"]
     @formatJobsForStates queue, states, keys, callback
 
+  formatJob: (queue = "*", key, callback) ->
+    ideally = errify callback
+
+    [_, id] = queuenameMayHaveColon key
+    states  = ["active", "completed", "delayed", "failed", "wait"]
+    for state in states
+      await @listsByState queue, state, ideally defer lists
+      for list in lists when list = list.toString()
+        [queuename, _] = queuenameMayHaveColon list
+
+        switch state
+          when "active", "wait"
+            await @redis.lrange list, 0, -1, ideally defer keys
+            return callback null, {queue: queuename, state, id} if (String id) in keys
+
+          when "delayed"
+            await @redis.zscore list, id, ideally defer score
+            return callback null, {queue: queuename, state, id} if score?
+
+          else
+            await @redis.SISMEMBER list, id, ideally defer isMember
+            return callback null, {queue: queuename, state, id} if (Number isMember) is 1
+
+    callback null, {queue: queuename, state: "stuck", id}
+
   commandRemoveFromStateLists: (prefix, id) -> [
     ["lrem", "#{prefix}active",     0, id]
     ["lrem", "#{prefix}wait",       0, id]
@@ -274,8 +299,7 @@ class RedisModel
     await @redis.exists key, ideally defer exists
     return callback null unless exists
 
-    await @formatJobs queue, [key], ideally defer jobs
-    [job] = jobs
+    await @formatJob queue, key, ideally defer job
     await @redis.hgetall key, ideally defer result
     for property, stringified of result when stringified.trim() isnt ""
       job[property] = JSON.parse stringified

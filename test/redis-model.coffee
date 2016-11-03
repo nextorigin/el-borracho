@@ -436,30 +436,33 @@ describe "RedisModel", ->
       expect(err.toString()).to.contain "id required"
       done()
 
-    it "should get from a specific queue data for a job by id", (done) ->
-      ideally = errify done
-      data    = {name: "testjob", foo: "bar"}
+    validStates = ["active", "completed", "delayed", "failed", "wait"]
+    for state in validStates then do (state) ->
+      it "should get from a specific queue data for a job by id of state #{state}", (done) ->
+        ideally = errify done
+        data    = {name: "testjob", foo: "bar"}
 
-      await fakeJob queuename, data, "active", ideally defer {queue, job}
+        await fakeJob queuename, data, state, ideally defer {queue, job}
 
-      await instance.dataById queuename, job.jobId, ideally defer allJobData
-      allJobDataInterface =
-        attempts:     1
-        attemptsMade: 0
-        # data:         {}
-        delay:         0
-        opts:         {}
-        progress:     0
-        # returnvalue:  null
-        stacktrace:   []
-        timestamp:    1467326353545
+        await instance.dataById queuename, job.jobId, ideally defer allJobData
+        allJobDataInterface =
+          attempts:     1
+          attemptsMade: 0
+          # data:         {}
+          delay:        0
+          opts:         {}
+          progress:     0
+          # returnvalue:  null
+          stacktrace:   []
+          timestamp:    1467326353545
 
-      for own property, value of allJobDataInterface
-        type = if Array.isArray value then "array" else typeof value
-        expect(allJobData[property]).to.be.a type
-      expect(allJobData.data).to.deep.equal data
+        expect(allJobData.state).to.equal state
+        for own property, value of allJobDataInterface
+          type = if Array.isArray value then "array" else typeof value
+          expect(allJobData[property]).to.be.a type
+        expect(allJobData.data).to.deep.equal data
 
-      qCleaner(queue).asCallback done
+        qCleaner(queue).asCallback done
 
   describe "##dataForJobs", ->
     it "should get data for jobs", (done) ->
@@ -474,6 +477,7 @@ describe "RedisModel", ->
         {queue: queueAndJob2.queue.name, id: queueAndJob2.job.jobId}
       ]
       await instance.dataForJobs jobs, ideally defer jobsWithData
+      expect(jobsWithData).to.have.length 2
       for jobWithData in jobsWithData
         expect(jobWithData.data).to.deep.equal data
 
