@@ -26,6 +26,15 @@ describe "RedisModel", ->
       expect(instance.redis).to.equal client
 
   describe "##jobs", ->
+    it "should return early with an empty array if no matching jobs are found", (done) ->
+      ideally = errify done
+
+      await instance.jobs null, "active", ideally defer jobs
+
+      expect(jobs).to.be.an.instanceof Array
+      expect(jobs).to.be.empty
+      done()
+
     it "should return from all queues all jobs of a specific state", (done) ->
       ideally = errify done
       data    = {name: "testjob", foo: "bar"}
@@ -76,6 +85,15 @@ describe "RedisModel", ->
       qCleaner(queue).asCallback done
 
   describe "##jobsByQueue", ->
+    it "should return early with an empty array if no matching jobs are found", (done) ->
+      ideally = errify done
+
+      await instance.jobsByQueue null, ideally defer jobs
+
+      expect(jobs).to.be.an.instanceof Array
+      expect(jobs).to.be.empty
+      done()
+
     it "should return from all queues all jobs", (done) ->
       ideally = errify done
       data    = {name: "testjob", foo: "bar"}

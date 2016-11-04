@@ -16,6 +16,8 @@ class RedisModel
 
     await @idsAndCountByState queue, state,  ideally defer list
     await @fullKeysForList list,             ideally defer names
+    return callback null, names unless names.length
+
     await @formatJobsForState queue, state, names, ideally defer jobs
     await @dataForJobs jobs,                 ideally defer jobs
     await @stacktraceForJobs jobs,           ideally defer jobs if state is "failed"
@@ -27,6 +29,8 @@ class RedisModel
     ideally = errify callback
 
     await @allKeys queue,                    ideally defer names
+    return callback null, names unless names.length
+
     await @formatJobs queue, names,          ideally defer jobs
     await @dataForJobs jobs,                 ideally defer jobs
     await @stacktraceForJobs jobs,           ideally defer jobs
