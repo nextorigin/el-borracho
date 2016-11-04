@@ -75,6 +75,60 @@ describe "RedisModel", ->
 
       qCleaner(queue).asCallback done
 
+  describe "##jobsByQueue", ->
+    it "should return from all queues all jobs", (done) ->
+      ideally = errify done
+      data    = {name: "testjob", foo: "bar"}
+      state   = "active"
+
+      await fakeJob queuename, data, state, ideally defer {queue, job}
+      await fakeJob "test2",   data, state, ideally defer queueAndJob2
+
+      await instance.jobsByQueue null, ideally defer jobs
+      jobInterface =
+        id:         0
+        progress:   0
+        queue:      "name"
+
+      expect(jobs.length).to.equal 2
+      for jobWithData in jobs
+        expect(jobWithData.state).to.equal state
+        expect(jobWithData.data).to.deep.equal data
+        for property, value of jobInterface
+          expect(jobWithData[property]).to.be.a typeof value
+
+      qCleaner queue
+        .then -> qCleaner queueAndJob2.queue
+        .asCallback done
+
+    it "should return from a specific queue all jobs", (done) ->
+      ideally = errify done
+      data    = {name: "testjob", foo: "bar"}
+      state   = "active"
+
+      await fakeJob queuename, data, state, ideally defer {queue, job}
+      await fakeJob queuename, data, state, ideally defer _
+      await fakeJob "test2",   data, state, ideally defer queueAndJob2
+
+      await instance.jobsByQueue queuename, ideally defer jobs
+      jobInterface =
+        id:         0
+        progress:   0
+        queue:      "name"
+
+      expect(jobs.length).to.equal 2
+      for jobWithData in jobs
+        expect(jobWithData.queue).to.equal queuename
+        expect(jobWithData.state).to.equal state
+        expect(jobWithData.data).to.deep.equal data
+        for property, value of jobInterface
+          expect(jobWithData[property]).to.be.a typeof value
+
+      qCleaner queue
+        .then -> qCleaner queueAndJob2.queue
+        .asCallback done
+
+
   describe "##idsAndCountByState", ->
     queue     = null
     job       = null
