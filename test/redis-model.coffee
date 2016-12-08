@@ -45,7 +45,7 @@ describe "RedisModel", ->
 
       await instance.jobs null, state, ideally defer jobs
       jobInterface =
-        id:         0
+        id:         "id"
         progress:   0
         queue:      "name"
 
@@ -70,7 +70,7 @@ describe "RedisModel", ->
 
       await instance.jobs queuename, state, ideally defer jobs
       jobInterface =
-        id:         0
+        id:         "id"
         progress:   0
         queue:      "name"
 
@@ -104,7 +104,7 @@ describe "RedisModel", ->
 
       await instance.jobsByQueue null, ideally defer jobs
       jobInterface =
-        id:         0
+        id:         "id"
         progress:   0
         queue:      "name"
 
@@ -130,7 +130,7 @@ describe "RedisModel", ->
 
       await instance.jobsByQueue queuename, ideally defer jobs
       jobInterface =
-        id:         0
+        id:         "id"
         progress:   0
         queue:      "name"
 

@@ -3,7 +3,7 @@ errify = require "errify"
 
 queuenameMayHaveColon = (key) ->
   [_, queue..., id] = key.split ":"
-  [(queue.join ":"), Number id]
+  [(queue.join ":"), id]
 
 flatten = (array) -> Array::concat array...
 
@@ -63,8 +63,7 @@ class RedisModel
 
     await (@redis.multi multi).exec ideally defer idsByList
     for idsOfList, i in idsByList
-      NumberIdsOfList = (Number id for id in idsOfList)
-      ids[queues[i]] = NumberIdsOfList
+      ids[queues[i]] = idsOfList
       count += idsOfList.length
 
     callback null, {ids, count}
@@ -166,8 +165,8 @@ class RedisModel
           jobs.push {queue: queuename, state, id}
 
     jobs = jobs.sort (a, b) ->
-      aid = parseInt a.id
-      bid = parseInt b.id
+      aid = a.id
+      bid = b.id
       if aid < bid then -1
       else if aid > bid then 1
       else 0
