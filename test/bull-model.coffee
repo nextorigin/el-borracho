@@ -1,4 +1,4 @@
-redis      = require "redis"
+redis      = require "ioredis"
 {expect}   = require "chai"
 express    = require "express"
 errify     = require "errify"

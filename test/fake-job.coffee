@@ -1,4 +1,4 @@
-redis      = require "redis"
+redis      = require "ioredis"
 errify     = require "errify"
 BullModel  = require "../src/bull-model"
 

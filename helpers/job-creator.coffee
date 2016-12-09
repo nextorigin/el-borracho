@@ -1,5 +1,5 @@
 Queue = require "bull"
-redis = require "redis"
+redis = require "ioredis"
 Stats = require "el-borracho-stats/worker"
 log   = console.log.bind console
 

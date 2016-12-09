@@ -1,4 +1,4 @@
-redis      = require "redis"
+redis      = require "ioredis"
 {expect}   = require "chai"
 errify     = require "errify"
 RedisModel = require "../src/redis-model"
