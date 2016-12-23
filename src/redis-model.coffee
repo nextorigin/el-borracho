@@ -355,14 +355,21 @@ class RedisModel
 
     callback null, jobs
 
+  queueNames: (callback) ->
+    ideally   = errify callback
+
+    await @scanRedis "bull:*:id", ideally defer queues
+    names = (queue[5..-4] for queue, i in queues)
+
+    callback null, names
+
   queues: (callback) ->
     ideally   = errify callback
     allCounts = []
 
-    await @scanRedis "bull:*:id", ideally defer queues
+    await @queueNames ideally defer queues
     for queue, i in queues
-      name = queue[5..-4]
-      await @stateCounts name, ideally defer allCounts[i]
+      await @stateCounts queue, ideally defer allCounts[i]
 
     callback null, allCounts
 
