@@ -151,6 +151,17 @@ describe "RedisModel", ->
     queue     = null
     job       = null
 
+    after (done) ->
+      ideally  = errify done
+      client   = redis.createClient()
+      instance = new RedisModel client
+
+      await instance.allKeys null, ideally defer keys
+      for key in keys
+        await instance.deleteById queuename, (key.split ":")[-1..][0], ideally defer _
+
+      done()
+
     it "should callback with error if state is not valid", (done) ->
       await instance.idsAndCountByState null, "badstate", defer err, _
       expect(err.toString()).to.contain "Invalid state"

@@ -19,6 +19,17 @@ describe "fakeJob", ->
     client   = null
     instance = null
 
+  after (done) ->
+    ideally  = errify done
+    client   = redis.createClient()
+    instance = new RedisModel client
+
+    await instance.allKeys null, ideally defer keys
+    for key in keys
+      await instance.deleteById queuename, (key.split ":")[-1..][0], ideally defer _
+
+    done()
+
   validStates = ["active", "completed", "delayed", "failed", "wait"] #, "stuck"]
   for state in validStates then do (state) ->
     it "should create a fake job in state #{state} and add it to the correct state list", (done) ->
