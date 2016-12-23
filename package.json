@@ -29,17 +29,17 @@
     "errify": "^1.0.0",
     "express": "^4.14.0",
     "iced-runtime": "^1.0.3",
-    "method-override": "^2.3.6",
+    "method-override": "^2.3.7",
     "sseries-of-tubes": "^2.0.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "coveralls": "^2.11.14",
-    "iced-coffee-coverage": "^1.0.3",
+    "coveralls": "^2.11.15",
+    "iced-coffee-coverage": "^1.0.21",
     "iced-coffee-script": "^108.0.11",
     "ioredis": "^2.4.2",
     "istanbul": "^0.4.5",
-    "mocha": "^3.1.0",
+    "mocha": "^3.2.0",
     "sinon": "^1.17.6"
   }
 }
