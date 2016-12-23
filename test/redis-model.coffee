@@ -1,4 +1,4 @@
-redis      = require "redis"
+redis      = require "ioredis"
 {expect}   = require "chai"
 errify     = require "errify"
 RedisModel = require "../src/redis-model"
@@ -45,7 +45,7 @@ describe "RedisModel", ->
 
       await instance.jobs null, state, ideally defer jobs
       jobInterface =
-        id:         0
+        id:         "id"
         progress:   0
         queue:      "name"
 
@@ -70,7 +70,7 @@ describe "RedisModel", ->
 
       await instance.jobs queuename, state, ideally defer jobs
       jobInterface =
-        id:         0
+        id:         "id"
         progress:   0
         queue:      "name"
 
@@ -104,7 +104,7 @@ describe "RedisModel", ->
 
       await instance.jobsByQueue null, ideally defer jobs
       jobInterface =
-        id:         0
+        id:         "id"
         progress:   0
         queue:      "name"
 
@@ -130,7 +130,7 @@ describe "RedisModel", ->
 
       await instance.jobsByQueue queuename, ideally defer jobs
       jobInterface =
-        id:         0
+        id:         "id"
         progress:   0
         queue:      "name"
 
@@ -150,6 +150,17 @@ describe "RedisModel", ->
   describe "##idsAndCountByState", ->
     queue     = null
     job       = null
+
+    after (done) ->
+      ideally  = errify done
+      client   = redis.createClient()
+      instance = new RedisModel client
+
+      await instance.allKeys null, ideally defer keys
+      for key in keys
+        await instance.deleteById queuename, (key.split ":")[-1..][0], ideally defer _
+
+      done()
 
     it "should callback with error if state is not valid", (done) ->
       await instance.idsAndCountByState null, "badstate", defer err, _

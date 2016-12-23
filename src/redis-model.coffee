@@ -3,7 +3,7 @@ errify = require "errify"
 
 queuenameMayHaveColon = (key) ->
   [_, queue..., id] = key.split ":"
-  [(queue.join ":"), Number id]
+  [(queue.join ":"), id]
 
 flatten = (array) -> Array::concat array...
 
@@ -63,9 +63,8 @@ class RedisModel
 
     await (@redis.multi multi).exec ideally defer idsByList
     for idsOfList, i in idsByList
-      NumberIdsOfList = (Number id for id in idsOfList)
-      ids[queues[i]] = NumberIdsOfList
-      count += idsOfList.length
+      ids[queues[i]] = idsOfList[1]
+      count += idsOfList[1].length
 
     callback null, {ids, count}
 
@@ -166,8 +165,8 @@ class RedisModel
           jobs.push {queue: queuename, state, id}
 
     jobs = jobs.sort (a, b) ->
-      aid = parseInt a.id
-      bid = parseInt b.id
+      aid = a.id
+      bid = b.id
       if aid < bid then -1
       else if aid > bid then 1
       else 0
@@ -198,7 +197,7 @@ class RedisModel
             return callback null, {queue: queuename, state, id} if score?
 
           else
-            await @redis.SISMEMBER list, id, ideally defer isMember
+            await @redis.sismember list, id, ideally defer isMember
             return callback null, {queue: queuename, state, id} if (Number isMember) is 1
 
     callback null, {queue: queuename, state: "stuck", id}
@@ -317,7 +316,7 @@ class RedisModel
       ["hget", "bull:#{job.queue}:#{job.id}", "data"]
 
     await (@redis.multi multi).exec ideally defer results
-    job.data = JSON.parse results[i] for job, i in jobs
+    job.data = JSON.parse results[i][1] for job, i in jobs
     callback null, jobs
 
   progressForJobs: (jobs, callback) ->
@@ -327,7 +326,7 @@ class RedisModel
       ["hget", "bull:#{job.queue}:#{job.id}", "progress"]
 
     await (@redis.multi multi).exec ideally defer results
-    job.progress = JSON.parse results[i] for job, i in jobs
+    job.progress = JSON.parse results[i][1] for job, i in jobs
     callback null, jobs
 
   stacktraceForJobs: (jobs, callback) ->
@@ -337,7 +336,7 @@ class RedisModel
       ["hget", "bull:#{job.queue}:#{job.id}", "stacktrace"]
 
     await (@redis.multi multi).exec ideally defer results
-    job.stacktrace = JSON.parse results[i] for job, i in jobs
+    job.stacktrace = JSON.parse results[i][1] for job, i in jobs
     callback null, jobs
 
   delayTimeForJobs: (jobs, callback) ->
@@ -352,18 +351,25 @@ class RedisModel
       # the timestamp and the end contains the incrementing job id. We don't care about
       # the id, so we can just remove this part from the value.
       # https://github.com/OptimalBits/bull/blob/e38b2d70de1892a2c7f45a1fed243e76fd91cfd2/lib/scripts.js#L90
-      job.delayUntil = new Date Math.floor results[i]/0x1000
+      job.delayUntil = new Date Math.floor results[i][1]/0x1000
 
     callback null, jobs
+
+  queueNames: (callback) ->
+    ideally   = errify callback
+
+    await @scanRedis "bull:*:id", ideally defer queues
+    names = (queue[5..-4] for queue, i in queues)
+
+    callback null, names
 
   queues: (callback) ->
     ideally   = errify callback
     allCounts = []
 
-    await @scanRedis "bull:*:id", ideally defer queues
+    await @queueNames ideally defer queues
     for queue, i in queues
-      name = queue[5..-4]
-      await @stateCounts name, ideally defer allCounts[i]
+      await @stateCounts queue, ideally defer allCounts[i]
 
     callback null, allCounts
 

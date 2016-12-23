@@ -1,5 +1,5 @@
 http       = require "http"
-Redis      = require "redis"
+Redis      = require "ioredis"
 {expect}   = require "chai"
 {spy}      = require "sinon"
 express    = require "express"
