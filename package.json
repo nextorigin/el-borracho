@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/nextorigin/el-borracho",
   "dependencies": {
-    "bull": "^2.0.0",
+    "bull": "^2.1.0",
     "errify": "^1.0.0",
     "express": "^4.14.0",
     "iced-runtime": "^1.0.3",
