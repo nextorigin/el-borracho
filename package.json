@@ -27,7 +27,7 @@
   "dependencies": {
     "bull": "^2.0.0",
     "errify": "^1.0.0",
-    "express": "^4.14.0",
+    "express": "^4.15.3",
     "iced-runtime": "^1.0.3",
     "method-override": "^2.3.7",
     "sseries-of-tubes": "^2.0.0"
