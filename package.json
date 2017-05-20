@@ -29,7 +29,7 @@
     "errify": "^1.0.0",
     "express": "^4.14.0",
     "iced-runtime": "^1.0.3",
-    "method-override": "^2.3.7",
+    "method-override": "^2.3.9",
     "sseries-of-tubes": "^2.0.0"
   },
   "devDependencies": {
