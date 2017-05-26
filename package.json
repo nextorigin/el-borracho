@@ -33,7 +33,7 @@
     "sseries-of-tubes": "^2.0.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
+    "chai": "^4.0.0",
     "coveralls": "^2.11.15",
     "iced-coffee-coverage": "^1.0.21",
     "iced-coffee-script": "^108.0.11",
